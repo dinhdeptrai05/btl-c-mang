@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Client.Forms;
 using Client.Core;
+using Client.Forms;
 
 namespace Client
 {
@@ -10,14 +10,12 @@ namespace Client
     {
         static async Task Main(string[] args)
         {
-            Console.Title = "Auction Client";
             Console.WriteLine("Client đấu giá trực tuyến");
             Console.WriteLine("-------------------------");
 
             try
             {
-                var client = new AuctionClient("127.0.0.1", 8000);
-                await client.ConnectAsync();
+                var client = AuctionClient.gI("127.0.0.1", 8000);
 
                 Console.WriteLine("Kết nối thành công với server.");
 

@@ -116,6 +116,11 @@ namespace Client.Core
         {
         }
 
+        public byte[] GetBytes()
+        {
+            return _stream.ToArray();
+        }
+
         public void Dispose()
         {
             _writer?.Dispose();

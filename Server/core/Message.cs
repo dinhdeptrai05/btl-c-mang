@@ -22,6 +22,13 @@ namespace Server.Core
             WriteSByte(_commandId);
         }
 
+        public Message(byte[] data)
+        {
+            _stream = new MemoryStream(data);
+            _reader = new BinaryReader(_stream, Encoding.UTF8);
+            _writer = new BinaryWriter(_stream, Encoding.UTF8);
+        }
+
         // Write methods
         public void WriteByte(byte value)
         {
@@ -114,6 +121,11 @@ namespace Server.Core
 
         public void Flush()
         {
+        }
+
+        public byte[] GetBytes()
+        {
+            return _stream.ToArray();
         }
 
         public void Dispose()

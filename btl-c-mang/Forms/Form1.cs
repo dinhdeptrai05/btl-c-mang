@@ -2,6 +2,9 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using Client.Core;
+using Message = Client.Core.Message;
+using Client.enums;
 
 namespace Client.Forms
 {
@@ -30,6 +33,37 @@ namespace Client.Forms
 
             InitLoginForm();
             this.Load += FormLogin_Load;
+
+            AuctionClient.gI().RegisterHandler(CommandType.LoginResponse, HandleLoginResponse);
+        }
+
+        private void HandleLoginResponse(Message message)
+        {
+            bool success = message.ReadBoolean();
+            Console.WriteLine($"Login response: {success}");
+
+            if (success)
+            {
+                int userId = message.ReadInt();
+                string username = message.ReadUTF();
+
+                // Lưu userId nếu cần
+                // AuctionClient.gI().UserId = userId;
+
+                Invoke(new Action(() =>
+                {
+                    MessageBox.Show($"Đăng nhập thành công!\nXin chào {username} (ID: {userId})", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // Mở form chính tại đây nếu muốn
+                    // this.Hide(); new MainForm().Show();
+                }));
+            }
+            else
+            {
+                Invoke(new Action(() =>
+                {
+                    MessageBox.Show("Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }));
+            }
         }
 
 
@@ -38,6 +72,7 @@ namespace Client.Forms
             this.BackColor = backgroundColor;
 
             panelHeader = new Panel();
+            panelHeader.Size = new Size(this.Width, 400);
             panelHeader.Dock = DockStyle.Top;
             panelHeader.Height = 40;
             panelHeader.BackColor = primaryColor;
@@ -187,7 +222,7 @@ namespace Client.Forms
             return bitmap;
         }
 
-        private void BtnLogin_Click(object sender, EventArgs e)
+        private async void BtnLogin_Click(object sender, EventArgs e)
         {
             string username = txtUsername.Text.Trim();
             string password = txtPassword.Text;
@@ -198,16 +233,11 @@ namespace Client.Forms
                 return;
             }
 
-            if (username == "admin" && password == "123456")
-            {
-                MessageBox.Show("Đăng nhập thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            else
-            {
-                MessageBox.Show("Sai tên đăng nhập hoặc mật khẩu!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                txtPassword.Clear();
-                txtPassword.Focus();
-            }
+            Message msg = new Message(1);
+            msg.WriteUTF(username);
+            msg.WriteUTF(password);
+            AuctionClient.SendMessage(msg);
+
         }
 
         private void LinkForgotPassword_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

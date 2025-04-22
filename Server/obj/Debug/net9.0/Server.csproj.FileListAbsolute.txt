@@ -12,3 +12,4 @@ C:\Users\Windows\Desktop\BT\LT_Mang\BTL\Server\obj\Debug\net9.0\refint\Server.dl
 C:\Users\Windows\Desktop\BT\LT_Mang\BTL\Server\obj\Debug\net9.0\Server.pdb
 C:\Users\Windows\Desktop\BT\LT_Mang\BTL\Server\obj\Debug\net9.0\Server.genruntimeconfig.cache
 C:\Users\Windows\Desktop\BT\LT_Mang\BTL\Server\obj\Debug\net9.0\ref\Server.dll
+C:\Users\Windows\Desktop\BT\LT_Mang\BTL\Server\obj\Debug\net9.0\Server.sourcelink.json
