@@ -1,0 +1,10 @@
+C:\Users\pdinh\Desktop\btlc#vamang\ttesst\bin\Debug\ttesst.exe.config
+C:\Users\pdinh\Desktop\btlc#vamang\ttesst\bin\Debug\ttesst.exe
+C:\Users\pdinh\Desktop\btlc#vamang\ttesst\bin\Debug\ttesst.pdb
+C:\Users\pdinh\Desktop\btlc#vamang\ttesst\obj\Debug\ttesst.csproj.AssemblyReference.cache
+C:\Users\pdinh\Desktop\btlc#vamang\ttesst\obj\Debug\ttesst.Properties.Resources.resources
+C:\Users\pdinh\Desktop\btlc#vamang\ttesst\obj\Debug\ttesst.csproj.GenerateResource.cache
+C:\Users\pdinh\Desktop\btlc#vamang\ttesst\obj\Debug\ttesst.csproj.CoreCompileInputs.cache
+C:\Users\pdinh\Desktop\btlc#vamang\ttesst\obj\Debug\ttesst.exe
+C:\Users\pdinh\Desktop\btlc#vamang\ttesst\obj\Debug\ttesst.pdb
+C:\Users\pdinh\Desktop\btlc#vamang\ttesst\obj\Debug\ModernLoginApp.FormLogin.resources
