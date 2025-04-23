@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 using Server.Core;
 
@@ -9,55 +8,72 @@ namespace AuctionServer
 {
     public class ClientSession
     {
-        private static NetworkStream _stream;
+        private TcpClient _client;
+        private NetworkStream _stream;
 
-        public static void HandleClient(TcpClient client)
+        public ClientSession(TcpClient client)
         {
-            NetworkStream stream = client.GetStream();
-            _stream = stream;
+            _client = client;
+            _stream = client.GetStream();
+        }
+
+        public void Start()
+        {
+            Task.Run(HandleClient);
+        }
+
+        private async Task HandleClient()
+        {
             try
             {
                 while (true)
                 {
                     byte[] lengthBuffer = new byte[4];
-                    stream.Read(lengthBuffer, 0, 4);
-                    int messageLength = BitConverter.ToInt32(lengthBuffer, 0);
+                    int read = await _stream.ReadAsync(lengthBuffer, 0, 4);
+                    if (read < 4) break; // client đóng kết nối
 
+                    int messageLength = BitConverter.ToInt32(lengthBuffer, 0);
                     byte[] buffer = new byte[messageLength];
                     int bytesRead = 0;
+
                     while (bytesRead < messageLength)
                     {
-                        bytesRead += stream.Read(buffer, bytesRead, messageLength - bytesRead);
+                        int currentRead = await _stream.ReadAsync(buffer, bytesRead, messageLength - bytesRead);
+                        if (currentRead == 0) break;
+                        bytesRead += currentRead;
                     }
 
-                    // Tạo message từ buffer (đã bao gồm CommandID ở byte đầu tiên)
                     var message = new Message(buffer);
 
-                    // Gọi handler
-                    Controller.HandleMessage(message);
+                    // Truyền context vào xử lý nếu cần
+                    Controller.HandleMessage(message, this);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Client disconnected: " + ex.Message);
-                client.Close();
+            }
+            finally
+            {
+                _stream.Close();
+                _client.Close();
             }
         }
 
-        public static void SendMessage(Message message)
+        public async Task SendMessage(Message message)
         {
             try
             {
                 byte[] data = message.GetBytes();
                 byte[] lengthPrefix = BitConverter.GetBytes(data.Length);
 
-                _stream.Write(lengthPrefix, 0, 4);
-                _stream.Write(data, 0, data.Length);
-                _stream.Flush();
+                await _stream.WriteAsync(lengthPrefix, 0, 4);
+                await _stream.WriteAsync(data, 0, data.Length);
+                await _stream.FlushAsync();
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Lỗi khi gửi lại message cho client: " + ex.Message);
+                Console.WriteLine("Lỗi gửi message: " + ex.Message);
             }
         }
     }

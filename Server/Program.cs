@@ -22,9 +22,10 @@ namespace AuctionServer
                 TcpClient client = listener.AcceptTcpClient();
                 Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
 
-                Thread clientThread = new Thread(() => ClientSession.HandleClient(client));
-                clientThread.Start();
+                var session = new ClientSession(client);
+                session.Start();
             }
+
         }
     }
 }

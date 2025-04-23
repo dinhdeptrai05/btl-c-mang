@@ -1,6 +1,4 @@
-using System;
 using System.IO;
-using System.Net.Sockets;
 using System.Text;
 
 namespace Client.Core
@@ -10,7 +8,7 @@ namespace Client.Core
         private MemoryStream _stream;
         private BinaryWriter _writer;
         private BinaryReader _reader;
-        public sbyte _commandId;
+        private sbyte _commandId;
 
         public Message(sbyte commandId)
         {
@@ -20,6 +18,13 @@ namespace Client.Core
             _reader = new BinaryReader(_stream, Encoding.UTF8);
 
             WriteSByte(_commandId);
+        }
+
+        public Message(byte[] data)
+        {
+            _stream = new MemoryStream(data);
+            _reader = new BinaryReader(_stream, Encoding.UTF8);
+            _writer = new BinaryWriter(_stream, Encoding.UTF8);
         }
 
         // Write methods
@@ -116,25 +121,11 @@ namespace Client.Core
         {
         }
 
-        public void WriteToStream(NetworkStream stream)
-        {
-            _stream.Position = 0; // Đặt vị trí của MemoryStream về đầu
-            _stream.CopyTo(stream); // Ghi trực tiếp từ MemoryStream vào NetworkStream
-            stream.Flush(); // Đảm bảo dữ liệu được gửi đi
-        }
-
-        public string ToArray()
-        {
-            _stream.Position = 0; // Đặt vị trí của MemoryStream về đầu
-            byte[] data = _stream.ToArray(); // Lấy dữ liệu từ MemoryStream
-            return Encoding.UTF8.GetString(data); // Chuyển đổi thành chuỗi UTF-8
-        }
-
         public byte[] GetBytes()
         {
-            return BitConverter.GetBytes((short)_commandId);
+            return _stream.ToArray();
         }
-        
+
         public void Dispose()
         {
             _writer?.Dispose();

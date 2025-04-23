@@ -6,7 +6,7 @@ namespace AuctionServer
 {
     public class Controller
     {
-        public static void HandleMessage(Message message)
+        public static void HandleMessage(Message message, ClientSession session)
         {
             try
             {
@@ -15,7 +15,7 @@ namespace AuctionServer
                 switch (commandId)
                 {
                     case CommandType.Login:
-                        HandleLogin(message);
+                        HandleLogin(message, session);
                         break;
                     default:
                         Console.WriteLine($"Nhận được command không xác định: {commandId}");
@@ -28,7 +28,7 @@ namespace AuctionServer
             }
         }
 
-        private static void HandleLogin(Message message)
+        private static void HandleLogin(Message message, ClientSession session)
         {
             string username = message.ReadUTF();
             string password = message.ReadUTF();
@@ -61,7 +61,8 @@ namespace AuctionServer
                 response.WriteUTF(username);
             }
 
-            ClientSession.SendMessage(response);
+            response.WriteUTF("Tài khoản hoặc mật khẩu không đúng.");
+            session.SendMessage(response);
         }
     }
 }
