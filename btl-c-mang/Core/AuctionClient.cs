@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,7 +57,7 @@ namespace Client.Core
             try
             {
                 _tcpClient = new TcpClient();
-                await _tcpClient.ConnectAsync(_serverIp, _serverPort);
+                await _tcpClient.ConnectAsync(IPAddress.Parse(_serverIp), _serverPort);
                 stream = _tcpClient.GetStream();
                 _isConnected = true;
                 Console.WriteLine("Đã kết nối tới server.");

@@ -15,12 +15,12 @@ namespace AuctionServer
         {
             TcpListener listener = new TcpListener(IPAddress.Any, 8000);
             listener.Start();
-            Console.WriteLine("Server started...");
+            Console.WriteLine($"Server started on {listener.LocalEndpoint}...");
 
             while (true)
             {
                 TcpClient client = listener.AcceptTcpClient();
-                Console.WriteLine("Client connected.");
+                Console.WriteLine($"Client connected from {client.Client.RemoteEndPoint}");
 
                 Thread clientThread = new Thread(() => ClientSession.HandleClient(client));
                 clientThread.Start();
