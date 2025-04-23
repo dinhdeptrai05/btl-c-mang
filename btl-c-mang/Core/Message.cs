@@ -1,6 +1,4 @@
-using System;
 using System.IO;
-using System.Net.Sockets;
 using System.Text;
 
 namespace Client.Core
@@ -20,6 +18,13 @@ namespace Client.Core
             _reader = new BinaryReader(_stream, Encoding.UTF8);
 
             WriteSByte(_commandId);
+        }
+
+        public Message(byte[] data)
+        {
+            _stream = new MemoryStream(data);
+            _reader = new BinaryReader(_stream, Encoding.UTF8);
+            _writer = new BinaryWriter(_stream, Encoding.UTF8);
         }
 
         // Write methods

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Client.enums;
 
 namespace Client.Core
 {
@@ -81,27 +80,21 @@ namespace Client.Core
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     byte[] lengthBuffer = new byte[4];
-                    await stream.ReadAsync(lengthBuffer, 0, 4, cancellationToken);
-                    int length = BitConverter.ToInt32(lengthBuffer, 0);
+                    stream.Read(lengthBuffer, 0, 4);
+                    int messageLength = BitConverter.ToInt32(lengthBuffer, 0);
 
-                    byte[] buffer = new byte[length];
+                    byte[] buffer = new byte[messageLength];
                     int bytesRead = 0;
-                    while (bytesRead < length)
+                    while (bytesRead < messageLength)
                     {
-                        bytesRead += await stream.ReadAsync(buffer, bytesRead, length - bytesRead, cancellationToken);
+                        bytesRead += stream.Read(buffer, bytesRead, messageLength - bytesRead);
                     }
 
-                    var message = new Message(0);
-                    sbyte commandId = message.ReadSByte();
+                    // Tạo message từ buffer (đã bao gồm CommandID ở byte đầu tiên)
+                    var message = new Message(buffer);
 
-                    if (_messageHandlers.TryGetValue(commandId, out var handler))
-                    {
-                        handler.Invoke(message);
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Không tìm thấy handler cho CommandID: {commandId}");
-                    }
+                    // Gọi handler
+                    Controller.HandleMessage(message);
                 }
             }
             catch (Exception ex)

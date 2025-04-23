@@ -3,8 +3,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using Client.Core;
-using Message = Client.Core.Message;
 using Client.enums;
+using Message = Client.Core.Message;
 
 namespace Client.Forms
 {
@@ -28,16 +28,23 @@ namespace Client.Forms
         private Color textColor = Color.FromArgb(60, 60, 60);
         private Color backgroundColor = Color.White;
 
+        public static FormLogin instance;
+
+        public static FormLogin gI()
+        {
+            return instance;
+        }
+
         public FormLogin()
         {
-
+            instance = this;
             InitLoginForm();
             this.Load += FormLogin_Load;
 
             AuctionClient.gI().RegisterHandler(CommandType.LoginResponse, HandleLoginResponse);
         }
 
-        private void HandleLoginResponse(Message message)
+        public void HandleLoginResponse(Message message)
         {
             bool success = message.ReadBoolean();
             Console.WriteLine($"Login response: {success}");

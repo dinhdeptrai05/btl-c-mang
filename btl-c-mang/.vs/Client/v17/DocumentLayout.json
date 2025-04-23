@@ -3,16 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|c:\\users\\windows\\desktop\\bt\\lt_mang\\btl\\btl-c-mang\\core\\auctionclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:core\\auctionclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Forms\\Form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|c:\\users\\windows\\desktop\\bt\\lt_mang\\btl\\btl-c-mang\\core\\controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:core\\controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Forms\\Form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|c:\\users\\windows\\desktop\\bt\\lt_mang\\btl\\btl-c-mang\\core\\auctionclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:core\\auctionclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -27,36 +31,72 @@
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "Controller.cs",
+              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Core\\Controller.cs",
+              "RelativeDocumentMoniker": "Core\\Controller.cs",
+              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Core\\Controller.cs",
+              "RelativeToolTip": "Core\\Controller.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAATAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-23T03:34:02.581Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
               "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAoAAAAAAAAAAAAzwCAAAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAAwCAAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-22T17:33:17.628Z"
+              "WhenOpened": "2025-04-22T17:33:17.628Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "Form1.cs",
               "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Form1.cs",
               "RelativeDocumentMoniker": "Forms\\Form1.cs",
               "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Form1.cs",
               "RelativeToolTip": "Forms\\Form1.cs",
-              "ViewState": "AgIAAMIAAAAAAAAAAAAlwMkAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAC8AAAAAAAAAAAAgwDwAAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-22T17:37:23.78Z"
-            },
+              "WhenOpened": "2025-04-22T17:37:23.78Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "FloatingWindowState": {
+        "Id": "38bb02fe-e2d2-4be2-9f6c-76a99f7902f3",
+        "Display": 0,
+        "X": 690,
+        "Y": 112,
+        "Width": 1227,
+        "Height": 467,
+        "WindowState": 0
+      },
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 3,
               "Title": "AuctionClient.cs",
               "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Core\\AuctionClient.cs",
               "RelativeDocumentMoniker": "Core\\AuctionClient.cs",
               "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Core\\AuctionClient.cs",
               "RelativeToolTip": "Core\\AuctionClient.cs",
-              "ViewState": "AgIAAHoAAAAAAAAAAAAQwIEAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAFUAAAAAAAAAAAAewGAAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-04-22T17:39:14.439Z",
               "EditorCaption": ""

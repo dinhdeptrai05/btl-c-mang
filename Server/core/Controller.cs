@@ -6,7 +6,7 @@ namespace AuctionServer
 {
     public class Controller
     {
-        public static void HandleMessage(Message message, NetworkStream stream)
+        public static void HandleMessage(Message message)
         {
             try
             {
@@ -15,7 +15,7 @@ namespace AuctionServer
                 switch (commandId)
                 {
                     case CommandType.Login:
-                        HandleLogin(message, stream);
+                        HandleLogin(message);
                         break;
                     default:
                         Console.WriteLine($"Nhận được command không xác định: {commandId}");
@@ -28,7 +28,7 @@ namespace AuctionServer
             }
         }
 
-        private static void HandleLogin(Message message, NetworkStream stream)
+        private static void HandleLogin(Message message)
         {
             string username = message.ReadUTF();
             string password = message.ReadUTF();
@@ -61,24 +61,7 @@ namespace AuctionServer
                 response.WriteUTF(username);
             }
 
-            SendMessage(stream, response);
-        }
-
-        private static void SendMessage(NetworkStream stream, Message message)
-        {
-            try
-            {
-                byte[] data = message.GetBytes();
-                byte[] lengthPrefix = BitConverter.GetBytes(data.Length);
-
-                stream.Write(lengthPrefix, 0, 4);
-                stream.Write(data, 0, data.Length);
-                stream.Flush();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Lỗi khi gửi lại message cho client: " + ex.Message);
-            }
+            ClientSession.SendMessage(response);
         }
     }
 }
