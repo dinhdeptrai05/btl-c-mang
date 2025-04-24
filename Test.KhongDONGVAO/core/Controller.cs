@@ -11,20 +11,10 @@ namespace Client.Core
 
             switch (command)
             {
-                case CommandType.LoginResponse:
+                case 2:
                     {
-                        bool success = msg.ReadBoolean();
-                        if (success)
-                        {
-                            int userId = msg.ReadInt();
-                            string username = msg.ReadUTF();
-                            Console.WriteLine($"Đăng nhập thành công. User ID: {userId}, Username: {username}");
-                        }
-                        else
-                        {
-                            string errorMessage = msg.ReadUTF();
-                            Console.WriteLine($"Đăng nhập thất bại: {errorMessage}");
-                        }
+                        int res = msg.ReadInt();
+                        Console.WriteLine("Kết quả: " + res);
                         break;
                     }
                 default:

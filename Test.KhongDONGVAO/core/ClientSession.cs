@@ -21,12 +21,7 @@ namespace Client.Core
 
         public bool _isConnected = false;
 
-        // Events
         public event EventHandler Disconnected;
-
-        // User data
-        public int UserId { get; private set; }
-
 
         public static AuctionClient gI(string ip = null, int port = 0)
         {
@@ -89,10 +84,8 @@ namespace Client.Core
                         bytesRead += stream.Read(buffer, bytesRead, messageLength - bytesRead);
                     }
 
-                    // Tạo message từ buffer (đã bao gồm CommandID ở byte đầu tiên)
                     var message = new Message(buffer);
 
-                    // Gọi handler
                     Controller.HandleMessage(message);
                 }
             }
