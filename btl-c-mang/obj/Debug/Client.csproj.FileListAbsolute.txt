@@ -18,4 +18,3 @@ C:\Users\pdinh\Desktop\c#\btl-c-mang\btl-c-mang\obj\Debug\Client.csproj.Generate
 C:\Users\pdinh\Desktop\c#\btl-c-mang\btl-c-mang\obj\Debug\Client.csproj.CoreCompileInputs.cache
 C:\Users\pdinh\Desktop\c#\btl-c-mang\btl-c-mang\obj\Debug\Client.exe
 C:\Users\pdinh\Desktop\c#\btl-c-mang\btl-c-mang\obj\Debug\Client.pdb
-C:\Users\pdinh\Desktop\c#\btl-c-mang\btl-c-mang\obj\Debug\ModernLoginApp.FormLogin.resources

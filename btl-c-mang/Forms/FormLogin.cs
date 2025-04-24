@@ -16,17 +16,16 @@ namespace Client.Forms
         private Label lblUsername;
         private Label lblPassword;
         private PictureBox pictureBoxLogo;
-        private Label lblTitle;
-        private CheckBox chkRememberMe;
-        private LinkLabel linkForgotPassword;
-        private Panel panelHeader;
-        private Button btnClose;
-        private Button btnMinimize;
+        private Panel panelMain;
+        private Panel panelContent;
 
-        private Color primaryColor = Color.FromArgb(76, 175, 80);
-        private Color secondaryColor = Color.FromArgb(60, 145, 65);
-        private Color textColor = Color.FromArgb(60, 60, 60);
-        private Color backgroundColor = Color.White;
+        // Màu sắc với tông màu chủ đạo là xanh lá
+        private Color primaryColor = Color.FromArgb(76, 175, 80);     // Xanh lá
+        private Color secondaryColor = Color.FromArgb(60, 145, 65);   // Xanh lá đậm
+        private Color backgroundColor = Color.White;                  // Nền trắng
+        private Color textFieldColor = Color.FromArgb(236, 247, 250); // Màu nền textbox xanh nhạt
+        private Color borderColor = Color.FromArgb(200, 228, 238);    // Màu viền xanh nhạt
+        private Color textColor = Color.FromArgb(90, 90, 90);
 
         public static FormLogin instance;
 
@@ -38,10 +37,181 @@ namespace Client.Forms
         public FormLogin()
         {
             instance = this;
+
+            this.FormBorderStyle = FormBorderStyle.None;
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.Size = new Size(400, 550);
+            this.BackColor = Color.FromArgb(240, 240, 240); // Nền xám nhạt cho form
+            this.DoubleBuffered = true;
+            this.MinimumSize = new Size(350, 500); // Kích thước tối thiểu để đảm bảo responsive
             InitLoginForm();
             this.Load += FormLogin_Load;
+            this.Resize += FormLogin_Resize;
 
             AuctionClient.gI().RegisterHandler(CommandType.LoginResponse, HandleLoginResponse);
+
+
+        }
+
+        private void InitLoginForm()
+        {
+            // Panel chính - Phần trắng ở giữa
+            panelMain = new Panel();
+            panelMain.BackColor = backgroundColor;
+            panelMain.Size = new Size(340, 480);
+            panelMain.Location = new Point((this.ClientSize.Width - panelMain.Width) / 2, (this.ClientSize.Height - panelMain.Height) / 2);
+            panelMain.Anchor = AnchorStyles.None;
+            this.Controls.Add(panelMain);
+
+            // Panel chứa nội dung - Để căn chỉnh tất cả các thành phần bên trong
+            panelContent = new Panel();
+            panelContent.BackColor = Color.Transparent;
+            panelContent.Size = new Size(280, 420);
+            panelContent.Location = new Point((panelMain.Width - panelContent.Width) / 2, 30);
+            panelMain.Controls.Add(panelContent);
+
+            // Logo TEMPLE
+            pictureBoxLogo = new PictureBox();
+            pictureBoxLogo.Size = new Size(120, 120);
+            pictureBoxLogo.Location = new Point((panelContent.Width - 120) / 2, 10);
+            pictureBoxLogo.BackColor = Color.Transparent;
+            pictureBoxLogo.Image = CreateLogoImage(120);
+            pictureBoxLogo.SizeMode = PictureBoxSizeMode.Zoom;
+            panelContent.Controls.Add(pictureBoxLogo);
+
+            // Label Email (sử dụng để hiển thị "Tên đăng nhập" thay vì "Email")
+            lblUsername = new Label();
+            lblUsername.Text = "Email";
+            lblUsername.Font = new Font("Segoe UI", 10);
+            lblUsername.ForeColor = primaryColor;
+            lblUsername.Size = new Size(280, 20);
+            lblUsername.Location = new Point(0, pictureBoxLogo.Bottom + 30);
+            panelContent.Controls.Add(lblUsername);
+
+            // TextBox Email
+            txtUsername = new TextBox();
+            txtUsername.Size = new Size(280, 40);
+            txtUsername.Location = new Point(0, lblUsername.Bottom + 5);
+            txtUsername.Font = new Font("Segoe UI", 11);
+            txtUsername.ForeColor = textColor;
+            txtUsername.BackColor = textFieldColor;
+            txtUsername.BorderStyle = BorderStyle.FixedSingle;
+            //   txtUsername.PlaceholderText = "email@domain.com"
+            panelContent.Controls.Add(txtUsername);
+
+            // Label Mật khẩu
+            lblPassword = new Label();
+            lblPassword.Text = "Password";
+            lblPassword.Font = new Font("Segoe UI", 10);
+            lblPassword.ForeColor = primaryColor;
+            lblPassword.Size = new Size(280, 20);
+            lblPassword.Location = new Point(0, txtUsername.Bottom + 20);
+            panelContent.Controls.Add(lblPassword);
+
+            // TextBox Mật khẩu
+            txtPassword = new TextBox();
+            txtPassword.Size = new Size(280, 40);
+            txtPassword.Location = new Point(0, lblPassword.Bottom + 5);
+            txtPassword.Font = new Font("Segoe UI", 11);
+            txtPassword.ForeColor = textColor;
+            txtPassword.BackColor = textFieldColor;
+            txtPassword.PasswordChar = '•';
+            txtPassword.BorderStyle = BorderStyle.FixedSingle;
+            panelContent.Controls.Add(txtPassword);
+
+            // Nút Đăng nhập
+            btnLogin = new Button();
+            btnLogin.Text = "Log in";
+            btnLogin.Font = new Font("Segoe UI", 11, FontStyle.Bold);
+            btnLogin.ForeColor = Color.White;
+            btnLogin.BackColor = Color.FromArgb(74, 174, 211); // Màu xanh da trời như trong hình
+            btnLogin.Size = new Size(280, 45);
+            btnLogin.Location = new Point(0, txtPassword.Bottom + 30);
+            btnLogin.FlatStyle = FlatStyle.Flat;
+            btnLogin.FlatAppearance.BorderSize = 0;
+            btnLogin.Cursor = Cursors.Hand;
+            btnLogin.Click += BtnLogin_Click;
+            btnLogin.MouseEnter += (s, e) => btnLogin.BackColor = Color.FromArgb(64, 164, 201);
+            btnLogin.MouseLeave += (s, e) => btnLogin.BackColor = Color.FromArgb(74, 174, 211);
+            panelContent.Controls.Add(btnLogin);
+
+            // Button đóng form (X)
+            Button btnClose = new Button();
+            btnClose.Size = new Size(30, 30);
+            btnClose.Location = new Point(panelMain.Width - 35, 5);
+            btnClose.FlatStyle = FlatStyle.Flat;
+            btnClose.FlatAppearance.BorderSize = 0;
+            btnClose.Text = "✕";
+            btnClose.Font = new Font("Arial", 10, FontStyle.Bold);
+            btnClose.ForeColor = Color.FromArgb(150, 150, 150);
+            btnClose.BackColor = Color.Transparent;
+            btnClose.Cursor = Cursors.Hand;
+            btnClose.Click += (s, e) => this.Close();
+            btnClose.MouseEnter += (s, e) => btnClose.ForeColor = Color.FromArgb(100, 100, 100);
+            btnClose.MouseLeave += (s, e) => btnClose.ForeColor = Color.FromArgb(150, 150, 150);
+            panelMain.Controls.Add(btnClose);
+
+            // Thêm sự kiện để di chuyển form
+            panelMain.MouseDown += FormLogin_MouseDown;
+            this.MouseDown += FormLogin_MouseDown;
+
+            // Đổ bóng cho form chính
+            this.Paint += FormLogin_Paint;
+        }
+
+        private void FormLogin_Load(object sender, EventArgs e)
+        {
+            UpdateControlPositions();
+        }
+
+        private void FormLogin_Resize(object sender, EventArgs e)
+        {
+            UpdateControlPositions();
+        }
+
+        private void UpdateControlPositions()
+        {
+            // Cập nhật vị trí của panel chính để luôn ở giữa form
+            panelMain.Location = new Point((this.ClientSize.Width - panelMain.Width) / 2, (this.ClientSize.Height - panelMain.Height) / 2);
+        }
+
+        private Image CreateLogoImage(int size)
+        {
+            int padding = size / 10;
+            Bitmap bitmap = new Bitmap(size, size);
+            using (Graphics g = Graphics.FromImage(bitmap))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.Clear(Color.Transparent);
+
+                // Vẽ hình tròn xanh nhạt như trong hình mẫu
+                using (SolidBrush circleBrush = new SolidBrush(Color.FromArgb(173, 222, 241)))
+                {
+                    g.FillEllipse(circleBrush, padding, padding, size - 2 * padding, size - 2 * padding);
+                }
+
+                // Vẽ biểu tượng nhân vật đơn giản màu trắng giống hình mẫu
+                // Tạo hình dạng nhân vật đơn giản
+                using (Pen outlinePen = new Pen(Color.White, 3))
+                using (SolidBrush whiteBrush = new SolidBrush(Color.White))
+                {
+                    // Vẽ hình đầu và cơ thể
+                    int headSize = (int)(size * 0.5);
+                    int headTop = (int)(size * 0.3);
+                    g.FillEllipse(whiteBrush, (size - headSize) / 2, headTop, headSize, headSize);
+
+                    // Vẽ tóc và các chi tiết khác bằng Pen
+                    // Điều này chỉ là một biểu tượng đơn giản, thực tế logo TEMPLE sẽ được thay thế
+
+                    // Vẽ chữ T cho logo TEMPLE (nhưng được ẩn trong trường hợp này)
+                    using (Font font = new Font("Arial", size / 5, FontStyle.Bold))
+                    {
+                        StringFormat sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                        g.DrawString("T", font, new SolidBrush(primaryColor), new RectangleF(0, size / 2 - size / 8, size, size / 4), sf);
+                    }
+                }
+            }
+            return bitmap;
         }
 
         public void HandleLoginResponse(Message message)
@@ -71,162 +241,6 @@ namespace Client.Forms
                     MessageBox.Show("Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }));
             }
-        }
-
-
-        private void InitLoginForm()
-        {
-            this.BackColor = backgroundColor;
-
-            panelHeader = new Panel();
-            panelHeader.Size = new Size(this.Width, 400);
-            panelHeader.Dock = DockStyle.Top;
-            panelHeader.Height = 40;
-            panelHeader.BackColor = primaryColor;
-            panelHeader.MouseDown += FormLogin_MouseDown;
-
-            btnClose = new Button();
-            btnClose.Size = new Size(30, 30);
-            btnClose.FlatStyle = FlatStyle.Flat;
-            btnClose.FlatAppearance.BorderSize = 0;
-            btnClose.Text = "✕";
-            btnClose.Font = new Font("Arial", 10, FontStyle.Bold);
-            btnClose.ForeColor = Color.White;
-            btnClose.BackColor = Color.Transparent;
-            btnClose.Cursor = Cursors.Hand;
-            btnClose.Click += (s, e) => this.Close();
-            btnClose.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-
-            btnMinimize = new Button();
-            btnMinimize.Size = new Size(30, 30);
-            btnMinimize.FlatStyle = FlatStyle.Flat;
-            btnMinimize.FlatAppearance.BorderSize = 0;
-            btnMinimize.Text = "—";
-            btnMinimize.Font = new Font("Arial", 10, FontStyle.Bold);
-            btnMinimize.ForeColor = Color.White;
-            btnMinimize.BackColor = Color.Transparent;
-            btnMinimize.Cursor = Cursors.Hand;
-            btnMinimize.Click += (s, e) => this.WindowState = FormWindowState.Minimized;
-            btnMinimize.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-
-            panelHeader.Controls.Add(btnClose);
-            panelHeader.Controls.Add(btnMinimize);
-
-            pictureBoxLogo = new PictureBox();
-            pictureBoxLogo.Size = new Size(80, 80);
-            pictureBoxLogo.Location = new Point((this.Width - 80) / 2 + 50, 60);
-            pictureBoxLogo.BackColor = Color.Transparent;
-            pictureBoxLogo.Image = CreateLogoImage();
-            pictureBoxLogo.SizeMode = PictureBoxSizeMode.Zoom;
-
-            lblTitle = new Label();
-            lblTitle.Text = "TEMPLE";
-            lblTitle.Font = new Font("Arial", 20, FontStyle.Bold);
-            lblTitle.ForeColor = primaryColor;
-            lblTitle.TextAlign = ContentAlignment.MiddleCenter;
-            lblTitle.Size = new Size(200, 40);
-            lblTitle.Location = new Point((this.Width - 200) / 2 + 50, pictureBoxLogo.Bottom + 5);
-
-            lblUsername = new Label();
-            lblUsername.Text = "Tên đăng nhập:";
-            lblUsername.Font = new Font("Arial", 10);
-            lblUsername.ForeColor = textColor;
-            lblUsername.Location = new Point(50, lblTitle.Bottom + 30);
-            lblUsername.Size = new Size(300, 20);
-
-            txtUsername = new TextBox();
-            txtUsername.Location = new Point(50, lblUsername.Bottom + 5);
-            txtUsername.Size = new Size(300, 30);
-            txtUsername.Font = new Font("Arial", 12);
-            txtUsername.BorderStyle = BorderStyle.FixedSingle;
-
-            lblPassword = new Label();
-            lblPassword.Text = "Mật khẩu:";
-            lblPassword.Font = new Font("Arial", 10);
-            lblPassword.ForeColor = textColor;
-            lblPassword.Location = new Point(50, txtUsername.Bottom + 20);
-            lblPassword.Size = new Size(300, 20);
-
-            txtPassword = new TextBox();
-            txtPassword.Location = new Point(50, lblPassword.Bottom + 5);
-            txtPassword.Size = new Size(300, 30);
-            txtPassword.Font = new Font("Arial", 12);
-            txtPassword.PasswordChar = '•';
-            txtPassword.BorderStyle = BorderStyle.FixedSingle;
-
-            chkRememberMe = new CheckBox();
-            chkRememberMe.Text = "Ghi nhớ đăng nhập";
-            chkRememberMe.Font = new Font("Arial", 9);
-            chkRememberMe.ForeColor = textColor;
-            chkRememberMe.Location = new Point(50, txtPassword.Bottom + 15);
-            chkRememberMe.Size = new Size(150, 20);
-            chkRememberMe.Cursor = Cursors.Hand;
-
-            linkForgotPassword = new LinkLabel();
-            linkForgotPassword.Text = "Quên mật khẩu?";
-            linkForgotPassword.Font = new Font("Arial", 9);
-            linkForgotPassword.LinkColor = primaryColor;
-            linkForgotPassword.ActiveLinkColor = secondaryColor;
-            linkForgotPassword.Location = new Point(240, txtPassword.Bottom + 15);
-            linkForgotPassword.Size = new Size(110, 20);
-            linkForgotPassword.TextAlign = ContentAlignment.MiddleRight;
-            linkForgotPassword.LinkClicked += LinkForgotPassword_LinkClicked;
-            linkForgotPassword.Cursor = Cursors.Hand;
-
-            btnLogin = new Button();
-            btnLogin.Text = "ĐĂNG NHẬP";
-            btnLogin.Font = new Font("Arial", 12, FontStyle.Bold);
-            btnLogin.ForeColor = Color.White;
-            btnLogin.BackColor = primaryColor;
-            btnLogin.Location = new Point(50, chkRememberMe.Bottom + 30);
-            btnLogin.Size = new Size(300, 45);
-            btnLogin.FlatStyle = FlatStyle.Flat;
-            btnLogin.FlatAppearance.BorderSize = 0;
-            btnLogin.Cursor = Cursors.Hand;
-            btnLogin.Click += BtnLogin_Click;
-            btnLogin.MouseEnter += (s, e) => btnLogin.BackColor = secondaryColor;
-            btnLogin.MouseLeave += (s, e) => btnLogin.BackColor = primaryColor;
-
-            this.Controls.Add(panelHeader);
-            this.Controls.Add(pictureBoxLogo);
-            this.Controls.Add(lblTitle);
-            this.Controls.Add(lblUsername);
-            this.Controls.Add(txtUsername);
-            this.Controls.Add(lblPassword);
-            this.Controls.Add(txtPassword);
-            this.Controls.Add(chkRememberMe);
-            this.Controls.Add(linkForgotPassword);
-            this.Controls.Add(btnLogin);
-
-            this.Paint += FormLogin_Paint;
-        }
-
-        private void FormLogin_Load(object sender, EventArgs e)
-        {
-            btnClose.Location = new Point(panelHeader.Width - 35, 5);
-            btnMinimize.Location = new Point(panelHeader.Width - 70, 5);
-        }
-
-        private Image CreateLogoImage()
-        {
-            Bitmap bitmap = new Bitmap(80, 80);
-            using (Graphics g = Graphics.FromImage(bitmap))
-            {
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                g.Clear(Color.Transparent);
-                using (SolidBrush brush = new SolidBrush(primaryColor))
-                {
-                    g.FillEllipse(brush, 5, 5, 70, 70);
-                }
-                using (Font font = new Font("Arial", 40, FontStyle.Bold))
-                using (SolidBrush textBrush = new SolidBrush(Color.White))
-                {
-                    StringFormat sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString("T", font, textBrush, new RectangleF(5, 5, 70, 70), sf);
-
-                }
-            }
-            return bitmap;
         }
 
         private async void BtnLogin_Click(object sender, EventArgs e)
@@ -263,10 +277,12 @@ namespace Client.Forms
 
         private void FormLogin_Paint(object sender, PaintEventArgs e)
         {
-            using (Pen pen = new Pen(Color.FromArgb(180, 180, 180), 1))
-            {
-                e.Graphics.DrawRectangle(pen, 0, 0, this.Width - 1, this.Height - 1);
-            }
+            // Tạo hiệu ứng đổ bóng cho form
+            ControlPaint.DrawBorder(e.Graphics, panelMain.Bounds,
+                Color.FromArgb(200, 200, 200), 1, ButtonBorderStyle.Solid,
+                Color.FromArgb(200, 200, 200), 1, ButtonBorderStyle.Solid,
+                Color.FromArgb(200, 200, 200), 1, ButtonBorderStyle.Solid,
+                Color.FromArgb(200, 200, 200), 1, ButtonBorderStyle.Solid);
         }
     }
 
