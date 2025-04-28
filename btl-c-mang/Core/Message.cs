@@ -70,8 +70,9 @@ namespace Client.Core
 
         public void WriteUTF(string value)
         {
-            _writer.Write(value.Length);
-            _writer.Write(Encoding.UTF8.GetBytes(value));
+            byte[] utfBytes = Encoding.UTF8.GetBytes(value);
+            _writer.Write(utfBytes.Length);
+            _writer.Write(utfBytes);
         }
 
         // Read methods

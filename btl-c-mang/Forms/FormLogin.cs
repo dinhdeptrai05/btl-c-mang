@@ -223,15 +223,19 @@ namespace Client.Forms
             {
                 int userId = message.ReadInt();
                 string username = message.ReadUTF();
+                string name = message.ReadUTF();
 
                 // Lưu userId nếu cần
-                // AuctionClient.gI().UserId = userId;
+                AuctionClient.gI().UserId = userId;
+                AuctionClient.gI().Username = username;
+                AuctionClient.gI().Name = name;
+
 
                 Invoke(new Action(() =>
                 {
                     MessageBox.Show($"Đăng nhập thành công!\nXin chào {username} (ID: {userId})", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     // Mở form chính tại đây nếu muốn
-                    // this.Hide(); new MainForm().Show();
+                    this.Hide(); new FormLobby().Show();
                 }));
             }
             else

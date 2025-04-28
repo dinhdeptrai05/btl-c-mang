@@ -55,11 +55,8 @@
     </Compile>
     <Compile Include="Core\**\*.cs" />
     <Compile Include="enums\**\*.cs" />
-    <Compile Include="formsLobby.cs">
+    <Compile Include="FormLobby.cs">
       <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="formsLobby.Designer.cs">
-      <DependentUpon>formsLobby.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
