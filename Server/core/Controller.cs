@@ -38,13 +38,15 @@ namespace AuctionServer
             // Xác thực đơn giản (trong thực tế sẽ kiểm tra với database)
             bool success = !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password);
             int userId = -1;
+            string name = null;
 
             if (success)
             {
-                if (username == "admin" && password == "admin")
+                if (username == "1" && password == "1")
                 {
                     success = true;
                     userId = 1;
+                    name = "Tao là Temple";
                 }
                 else
                 {
@@ -59,6 +61,8 @@ namespace AuctionServer
             {
                 response.WriteInt(userId);
                 response.WriteUTF(username);
+                response.WriteUTF(name);
+
             }
 
             response.WriteUTF("Tài khoản hoặc mật khẩu không đúng.");

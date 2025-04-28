@@ -13,6 +13,15 @@ namespace AuctionServer
     {
         static void Main()
         {
+            try {
+                var database = new Database("localhost", "1", "root", "imaira2003");
+                database.TestConnection();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error connecting to database: {ex.Message}");
+                return;
+            }
             TcpListener listener = new TcpListener(IPAddress.Any, 8000);
             listener.Start();
             Console.WriteLine($"Server started on {listener.LocalEndpoint}...");

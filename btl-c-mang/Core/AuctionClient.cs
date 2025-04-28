@@ -25,8 +25,9 @@ namespace Client.Core
         public event EventHandler Disconnected;
 
         // User data
-        public int UserId { get; private set; }
-
+        public int UserId { get; set; }
+        public string Username { get; set; }
+        public string Name { get; set; }
 
         public static AuctionClient gI(string ip = null, int port = 0)
         {
