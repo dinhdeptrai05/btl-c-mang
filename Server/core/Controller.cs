@@ -1,11 +1,13 @@
 using System;
 using Server.Core;
 using System.Net.Sockets;
+using System.Data;
 
 namespace AuctionServer
 {
     public class Controller
     {
+        private static Database database = Database.gI();
         public static void HandleMessage(Message message, ClientSession session)
         {
             try
@@ -42,15 +44,26 @@ namespace AuctionServer
 
             if (success)
             {
-                if (username == "1" && password == "1")
+                try
                 {
-                    success = true;
-                    userId = 1;
-                    name = "Tao là Temple";
+                    string query = "SELECT * FROM accounts WHERE username = @param0 AND password = @param1";
+                    DataTable result = database.ExecuteQuery(query, username, password);
+                    if (result.Rows.Count > 0)
+                    {
+                        DataRow row = result.Rows[0];
+                        userId = Convert.ToInt32(row["id"]);
+                        name = row["name"].ToString();
+                        success = true;
+                    }
+                    else
+                    {
+                        success = false;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
                     success = false;
+                    Console.WriteLine($"Lỗi khi xử lý đăng nhập: {ex.Message}");
                 }
             }
 

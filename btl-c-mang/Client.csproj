@@ -55,7 +55,7 @@
     </Compile>
     <Compile Include="Core\**\*.cs" />
     <Compile Include="enums\**\*.cs" />
-    <Compile Include="FormLobby.cs">
+    <Compile Include="Forms\FormLobby.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Program.cs" />

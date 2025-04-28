@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Client.Core;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace OnlineAuctionSystem
+namespace Client.Forms
 {
     public partial class FormLobby : Form
     {
@@ -154,7 +155,7 @@ namespace OnlineAuctionSystem
             // User Name
             userNameLabel = new Label
             {
-                Text ="Temple peter",
+                Text = AuctionClient.gI().Name,
                 ForeColor = Color.NavajoWhite,
                 Font = new Font("Arial", 10, FontStyle.Regular),
                 Location = new Point(750, 17),

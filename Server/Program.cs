@@ -13,8 +13,9 @@ namespace AuctionServer
     {
         static void Main()
         {
-            try {
-                var database = new Database("localhost", "1", "root", "imaira2003");
+            try
+            {
+                var database = Database.gI();
                 database.TestConnection();
             }
             catch (Exception ex)

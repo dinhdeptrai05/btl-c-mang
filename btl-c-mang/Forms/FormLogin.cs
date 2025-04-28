@@ -233,9 +233,10 @@ namespace Client.Forms
 
                 Invoke(new Action(() =>
                 {
-                    MessageBox.Show($"Đăng nhập thành công!\nXin chào {username} (ID: {userId})", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"Đăng nhập thành công!\nXin chào {name} (ID: {userId})", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     // Mở form chính tại đây nếu muốn
-                    this.Hide(); new FormLobby().Show();
+                    this.Hide();
+                    new FormLobby().Show();
                 }));
             }
             else
