@@ -11,7 +11,7 @@ namespace AuctionServer
         private readonly string _connectionString;
 
         // Thông tin kết nối
-        private static readonly string server = "localhost";
+        private static readonly string server = "18.167.221.122";
         private static readonly string database = "btl_mang";
         private static readonly string username = "root";
         private static readonly string password = "imaira2003";
