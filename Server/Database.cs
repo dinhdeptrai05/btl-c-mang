@@ -7,7 +7,7 @@ namespace AuctionServer
     public class Database
     {
         private static Database _instance; // Instance duy nhất
-        private static readonly object _lock = new object(); // Để đảm bảo thread-safety
+        private static readonly object _lock = new object(); // Đảm bảo thread-safety
         private readonly string _connectionString;
 
         // Thông tin kết nối
@@ -54,6 +54,48 @@ namespace AuctionServer
             }
         }
 
+        // Thực thi truy vấn không trả về kết quả
+        public int ExecuteNonQuery(string query, params object[] parameters)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.Open();
+                using (var command = new MySqlCommand(query, connection))
+                {
+                    if (parameters != null)
+                    {
+                        for (int i = 0; i < parameters.Length; i++)
+                        {
+                            command.Parameters.AddWithValue($"@param{i}", parameters[i]);
+                        }
+                    }
+
+                    return command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        // Thực thi truy vấn trả về một giá trị duy nhất
+        public object ExecuteScalar(string query, params object[] parameters)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.Open();
+                using (var command = new MySqlCommand(query, connection))
+                {
+                    if (parameters != null)
+                    {
+                        for (int i = 0; i < parameters.Length; i++)
+                        {
+                            command.Parameters.AddWithValue($"@param{i}", parameters[i]);
+                        }
+                    }
+
+                    return command.ExecuteScalar();
+                }
+            }
+        }
+
         // Thực thi truy vấn trả về DataTable
         public DataTable ExecuteQuery(string query, params object[] parameters)
         {
@@ -76,42 +118,6 @@ namespace AuctionServer
                         adapter.Fill(dataTable);
                         return dataTable;
                     }
-                }
-            }
-        }
-
-        // Thực thi truy vấn không trả về kết quả
-        public int ExecuteNonQuery(string query, params MySqlParameter[] parameters)
-        {
-            using (var connection = GetConnection())
-            {
-                connection.Open();
-                using (var command = new MySqlCommand(query, connection))
-                {
-                    if (parameters != null)
-                    {
-                        command.Parameters.AddRange(parameters);
-                    }
-
-                    return command.ExecuteNonQuery();
-                }
-            }
-        }
-
-        // Thực thi truy vấn trả về một giá trị duy nhất
-        public object ExecuteScalar(string query, params MySqlParameter[] parameters)
-        {
-            using (var connection = GetConnection())
-            {
-                connection.Open();
-                using (var command = new MySqlCommand(query, connection))
-                {
-                    if (parameters != null)
-                    {
-                        command.Parameters.AddRange(parameters);
-                    }
-
-                    return command.ExecuteScalar();
                 }
             }
         }

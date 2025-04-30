@@ -50,7 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Forms/FormLogin.cs">
+    <Compile Include="Forms\FormLogin.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Core\**\*.cs" />
@@ -58,9 +58,12 @@
     <Compile Include="Forms\FormLobby.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Forms\FormLogin.Designer.cs">
+      <DependentUpon>FormLogin.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Forms/FormLogin.resx">
+    <EmbeddedResource Include="Forms\FormLogin.resx">
       <DependentUpon>FormLogin.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -86,4 +89,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>taskkill /f /im Client.exe /fi "MEMUSAGE gt 0" &gt;NUL 2&gt;NUL || exit /b 0</PreBuildEvent>
+  </PropertyGroup>
 </Project>

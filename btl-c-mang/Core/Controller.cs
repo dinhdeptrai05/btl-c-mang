@@ -17,6 +17,11 @@ namespace Client.Core
                         FormLogin.gI().HandleLoginResponse(msg);
                         break;
                     }
+                case CommandType.RegisterResponse:
+                    {
+                        FormLogin.gI().HandleRegisterResponse(msg);
+                        break;
+                    }
                 default:
                     Console.WriteLine("Not found handler for command ID: " + command);
                     break;

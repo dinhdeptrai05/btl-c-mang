@@ -19,6 +19,9 @@ namespace AuctionServer
                     case CommandType.Login:
                         HandleLogin(message, session);
                         break;
+                    case CommandType.Register:
+                        HandleRegister(message, session);
+                        break;
                     default:
                         Console.WriteLine($"Nhận được command không xác định: {commandId}");
                         break;
@@ -30,6 +33,55 @@ namespace AuctionServer
             }
         }
 
+        private static void HandleRegister(Message message, ClientSession session)
+        {
+            string username = message.ReadUTF();
+            string password = message.ReadUTF();
+
+            Console.WriteLine($"Nhận được yêu cầu đăng ký từ {username} với mật khẩu {password}");
+
+            bool success = !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password);
+
+            if (success)
+            {
+                try
+                {
+                    string query = "INSERT INTO accounts (username, password, name) VALUES (@param0, @param1, @param2)";
+                    int rowsAffected = database.ExecuteNonQuery(query, username, password, "CC");
+
+                    if (rowsAffected > 0)
+                    {
+                        success = true;
+                        Console.WriteLine($"Đăng ký thành công cho tài khoản {username}");
+                    }
+                    else
+                    {
+                        success = false;
+                        Console.WriteLine("Không thể thêm tài khoản vào cơ sở dữ liệu.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    success = false;
+                    Console.WriteLine($"Lỗi khi xử lý đăng ký: {ex.Message}");
+                }
+            }
+
+            var response = new Message(CommandType.RegisterResponse);
+            response.WriteBoolean(success);
+
+            if (success)
+            {
+                response.WriteUTF(username);
+            }
+            else
+            {
+                response.WriteUTF("Đăng ký thất bại. Tên tài khoản đã tồn tại hoặc thông tin không hợp lệ.");
+            }
+
+            session.SendMessage(response);
+        }
+
         private static void HandleLogin(Message message, ClientSession session)
         {
             string username = message.ReadUTF();
@@ -37,34 +89,31 @@ namespace AuctionServer
 
             Console.WriteLine($"Nhận được yêu cầu đăng nhập từ {username} với mật khẩu {password}");
 
-            // Xác thực đơn giản (trong thực tế sẽ kiểm tra với database)
-            bool success = !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password);
+            bool success = false;
             int userId = -1;
             string name = null;
 
-            if (success)
+            try
             {
-                try
+                string query = "SELECT id, name FROM accounts WHERE username = @param0 AND password = @param1";
+                DataTable result = database.ExecuteQuery(query, username, password);
+
+                if (result.Rows.Count > 0)
                 {
-                    string query = "SELECT * FROM accounts WHERE username = @param0 AND password = @param1";
-                    DataTable result = database.ExecuteQuery(query, username, password);
-                    if (result.Rows.Count > 0)
-                    {
-                        DataRow row = result.Rows[0];
-                        userId = Convert.ToInt32(row["id"]);
-                        name = row["name"].ToString();
-                        success = true;
-                    }
-                    else
-                    {
-                        success = false;
-                    }
+                    DataRow row = result.Rows[0];
+                    userId = Convert.ToInt32(row["id"]);
+                    name = row["name"].ToString();
+                    success = true;
                 }
-                catch (Exception ex)
+                else
                 {
-                    success = false;
-                    Console.WriteLine($"Lỗi khi xử lý đăng nhập: {ex.Message}");
+                    Console.WriteLine("Không tìm thấy người dùng trong cơ sở dữ liệu.");
                 }
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                Console.WriteLine($"Lỗi khi xử lý đăng nhập: {ex.Message}");
             }
 
             var response = new Message(CommandType.LoginResponse);
@@ -75,10 +124,12 @@ namespace AuctionServer
                 response.WriteInt(userId);
                 response.WriteUTF(username);
                 response.WriteUTF(name);
-
+            }
+            else
+            {
+                response.WriteUTF("Tài khoản hoặc mật khẩu không đúng.");
             }
 
-            response.WriteUTF("Tài khoản hoặc mật khẩu không đúng.");
             session.SendMessage(response);
         }
     }

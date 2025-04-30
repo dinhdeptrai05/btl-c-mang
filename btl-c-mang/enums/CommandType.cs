@@ -4,6 +4,11 @@ namespace Client.enums
     {
         // Từ Client đến Server
         public const sbyte Login = 1;
+
+        public const sbyte Register = -1;
+
+        public const sbyte RegisterResponse = -2;
+
         public const sbyte GetAllAuctions = 2;
         public const sbyte PlaceBid = 3;
         public const sbyte CreateAuction = 4;

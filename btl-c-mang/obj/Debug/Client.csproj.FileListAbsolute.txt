@@ -1,13 +1,3 @@
-C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\bin\Debug\Client.exe.config
-C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\bin\Debug\Client.exe
-C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.csproj.AssemblyReference.cache
-C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.Forms.FormLogin.resources
-C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.Properties.Resources.resources
-C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.csproj.GenerateResource.cache
-C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.csproj.CoreCompileInputs.cache
-C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.exe
-C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.pdb
-C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\bin\Debug\Client.pdb
 C:\Users\pdinh\Desktop\c#\btl-c-mang\btl-c-mang\bin\Debug\Client.exe.config
 C:\Users\pdinh\Desktop\c#\btl-c-mang\btl-c-mang\bin\Debug\Client.exe
 C:\Users\pdinh\Desktop\c#\btl-c-mang\btl-c-mang\bin\Debug\Client.pdb
@@ -18,3 +8,13 @@ C:\Users\pdinh\Desktop\c#\btl-c-mang\btl-c-mang\obj\Debug\Client.csproj.Generate
 C:\Users\pdinh\Desktop\c#\btl-c-mang\btl-c-mang\obj\Debug\Client.csproj.CoreCompileInputs.cache
 C:\Users\pdinh\Desktop\c#\btl-c-mang\btl-c-mang\obj\Debug\Client.exe
 C:\Users\pdinh\Desktop\c#\btl-c-mang\btl-c-mang\obj\Debug\Client.pdb
+C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\bin\Debug\Client.exe
+C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\bin\Debug\Client.exe.config
+C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.csproj.AssemblyReference.cache
+C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.Forms.FormLogin.resources
+C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.Properties.Resources.resources
+C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.csproj.GenerateResource.cache
+C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.csproj.CoreCompileInputs.cache
+C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.exe
+C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.pdb
+C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\bin\Debug\Client.pdb
