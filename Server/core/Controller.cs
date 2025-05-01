@@ -35,19 +35,45 @@ namespace AuctionServer
 
         private static void HandleRegister(Message message, ClientSession session)
         {
+            string name = message.ReadUTF();
             string username = message.ReadUTF();
             string password = message.ReadUTF();
 
+            string content = "";
+
             Console.WriteLine($"Nhận được yêu cầu đăng ký từ {username} với mật khẩu {password}");
 
-            bool success = !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password);
+            bool success = !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(name);
+
+            try
+            {
+                string query = "SELECT COUNT(*) FROM accounts WHERE username = @param0";
+                DataTable result = database.ExecuteQuery(query, username);
+
+                if (result.Rows.Count > 0)
+                {
+                    int count = Convert.ToInt32(result.Rows[0][0]);
+                    if (count > 0)
+                    {
+                        success = false;
+                        content = "Tên tài khoản đã tồn tại.";
+                        Console.WriteLine("Tên tài khoản đã tồn tại.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                content = $"Lỗi khi kiểm tra tên tài khoản: {ex.Message}";
+                Console.WriteLine($"Lỗi khi kiểm tra tên tài khoản: {ex.Message}");
+            }
 
             if (success)
             {
                 try
                 {
                     string query = "INSERT INTO accounts (username, password, name) VALUES (@param0, @param1, @param2)";
-                    int rowsAffected = database.ExecuteNonQuery(query, username, password, "CC");
+                    int rowsAffected = database.ExecuteNonQuery(query, username, password, name);
 
                     if (rowsAffected > 0)
                     {
@@ -76,7 +102,7 @@ namespace AuctionServer
             }
             else
             {
-                response.WriteUTF("Đăng ký thất bại. Tên tài khoản đã tồn tại hoặc thông tin không hợp lệ.");
+                response.WriteUTF(content);
             }
 
             session.SendMessage(response);

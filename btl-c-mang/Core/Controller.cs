@@ -1,6 +1,7 @@
 ﻿using System;
 using Client.enums;
-using Client.Forms;
+using Client.Forms.Login;
+using Client.Forms.Register;
 
 namespace Client.Core
 {
@@ -19,7 +20,7 @@ namespace Client.Core
                     }
                 case CommandType.RegisterResponse:
                     {
-                        FormLogin.gI().HandleRegisterResponse(msg);
+                        FormRegister.gI().HandleRegisterResponse(msg);
                         break;
                     }
                 default:

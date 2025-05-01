@@ -3,9 +3,9 @@ using System.Drawing;
 using System.Windows.Forms;
 using Client.Core;
 using Client.enums;
+using Client.Forms.Register;
 using Message = Client.Core.Message;
-
-namespace Client.Forms
+namespace Client.Forms.Login
 {
     public partial class FormLogin : Form
     {
@@ -31,8 +31,6 @@ namespace Client.Forms
 
             // Đăng ký xử lý sự kiện đăng nhập
             AuctionClient.gI().RegisterHandler(CommandType.LoginResponse, HandleLoginResponse);
-            AuctionClient.gI().RegisterHandler(CommandType.RegisterResponse, HandleRegisterResponse);
-
         }
 
         private void FormLogin_Load(object sender, EventArgs e)
@@ -101,39 +99,6 @@ namespace Client.Forms
                 }
             }
             return bitmap;
-        }
-
-        public void HandleRegisterResponse(Message message)
-        {
-            bool success = message.ReadBoolean();
-            Console.WriteLine($"Register response: {success}");
-
-            if (success)
-            {
-                string username = message.ReadUTF();
-                //string password = message.ReadUTF();
-
-                // Lưu userId nếu cần
-                AuctionClient.gI().Username = username;
-
-                Invoke(new Action(() =>
-                {
-                    MessageBox.Show($"Đăng ký thành công!)",
-                        "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    // Mở form chính tại đây nếu muốn
-                    this.Hide();
-                    new FormLobby().Show();
-                }));
-            }
-            else
-            {
-                string errorMessage = message.ReadUTF();
-                Invoke(new Action(() =>
-                {
-                    MessageBox.Show($"{errorMessage}",
-                        "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }));
-            }
         }
 
         public void HandleLoginResponse(Message message)
@@ -214,20 +179,23 @@ namespace Client.Forms
 
         private void button2_Click(object sender, EventArgs e)
         {
-            string username = txtUsername.Text.Trim();
-            string password = txtPassword.Text;
+            this.Hide();
+            new FormRegister().Show();
+        }
 
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
-            {
-                MessageBox.Show("Vui lòng nhập đầy đủ thông tin đăng ký!",
-                    "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
 
-            Message msg = new Message(CommandType.Register);
-            msg.WriteUTF(username);
-            msg.WriteUTF(password);
-            AuctionClient.SendMessage(msg);
+        }
+
+        private void lblUsername_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lblPassword_Click(object sender, EventArgs e)
+        {
+
         }
     }
 

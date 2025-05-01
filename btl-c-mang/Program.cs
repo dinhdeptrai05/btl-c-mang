@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Client.Core;
-using Client.Forms;
+using Client.Forms.Login;
 
 namespace Client
 {
