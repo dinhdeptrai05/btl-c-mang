@@ -2,6 +2,7 @@ using System;
 using Server.Core;
 using System.Net.Sockets;
 using System.Data;
+using Google.Protobuf.WellKnownTypes;
 
 namespace AuctionServer
 {
@@ -22,6 +23,9 @@ namespace AuctionServer
                     case CommandType.Register:
                         HandleRegister(message, session);
                         break;
+                    case CommandType.getAllRoom:
+                        HandleGetAllRoom(message, session);
+                        break;
                     default:
                         Console.WriteLine($"Nhận được command không xác định: {commandId}");
                         break;
@@ -33,6 +37,36 @@ namespace AuctionServer
             }
         }
 
+        private static void HandleGetAllRoom(Message message, ClientSession session)
+        {
+            Console.WriteLine("Nhận được yêu cầu lấy tất cả phòng đấu giá.");
+
+            try
+            {
+                string query = "SELECT * FROM rooms";
+                DataTable result = database.ExecuteQuery(query);
+
+                var response = new Message(CommandType.getAllRoomResponse);
+                int count = result.Rows.Count;
+                response.WriteInt(count);
+
+                for (int i = 0; i < count; i++)
+                {
+                    DataRow row = result.Rows[i];
+                    response.WriteInt(Convert.ToInt32(row["id"]));
+                    response.WriteInt(Convert.ToInt32(row["owner_id"]));
+                    response.WriteInt(Convert.ToInt32(row["is_open"]));
+                    response.WriteUTF(row["name"].ToString());
+                    response.WriteUTF(row["time_created"].ToString());
+                }
+
+                session.SendMessage(response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi lấy danh sách phòng đấu giá: {ex.Message}");
+            }
+        }
         private static void HandleRegister(Message message, ClientSession session)
         {
             string name = message.ReadUTF();
@@ -118,27 +152,39 @@ namespace AuctionServer
             bool success = false;
             int userId = -1;
             string name = null;
+            string avatar_url = null;
+
+            string error = null;
 
             try
             {
-                string query = "SELECT id, name FROM accounts WHERE username = @param0 AND password = @param1";
+                string query = "SELECT * FROM accounts WHERE username = @param0 AND password = @param1";
                 DataTable result = database.ExecuteQuery(query, username, password);
+
+                Console.WriteLine(result);
 
                 if (result.Rows.Count > 0)
                 {
                     DataRow row = result.Rows[0];
                     userId = Convert.ToInt32(row["id"]);
                     name = row["name"].ToString();
+                    avatar_url = row["avatar_url"].ToString();
+                    if (string.IsNullOrEmpty(avatar_url))
+                    {
+                        avatar_url = "https://www.w3schools.com/howto/img_avatar.png";
+                    }
                     success = true;
                 }
                 else
                 {
-                    Console.WriteLine("Không tìm thấy người dùng trong cơ sở dữ liệu.");
+                    success = false;
+                    error = "Tài khoản hoặc mật khẩu không đúng.";
                 }
             }
             catch (Exception ex)
             {
                 success = false;
+                error = $"Lỗi khi xử lý đăng nhập: {ex.Message}";
                 Console.WriteLine($"Lỗi khi xử lý đăng nhập: {ex.Message}");
             }
 
@@ -150,10 +196,11 @@ namespace AuctionServer
                 response.WriteInt(userId);
                 response.WriteUTF(username);
                 response.WriteUTF(name);
+                response.WriteUTF(avatar_url);
             }
             else
             {
-                response.WriteUTF("Tài khoản hoặc mật khẩu không đúng.");
+                response.WriteUTF(error);
             }
 
             session.SendMessage(response);

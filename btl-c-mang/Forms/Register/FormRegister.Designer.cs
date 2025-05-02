@@ -1,4 +1,6 @@
-﻿namespace Client.Forms.Register
+﻿using System.Windows.Forms;
+
+namespace Client.Forms.Register
 {
     partial class FormRegister
     {
@@ -30,19 +32,21 @@
         {
             this.panel2 = new System.Windows.Forms.Panel();
             this.panel7 = new System.Windows.Forms.Panel();
+            this.button1 = new System.Windows.Forms.Button();
             this.panel6 = new System.Windows.Forms.Panel();
             this.BackBtn = new System.Windows.Forms.Button();
             this.RegisterBtn = new System.Windows.Forms.Button();
             this.panel5 = new System.Windows.Forms.Panel();
-            this.PasswordBox = new System.Windows.Forms.RichTextBox();
+            this.PasswordBox = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
-            this.UsernameBox = new System.Windows.Forms.RichTextBox();
+            this.UsernameBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.panel3 = new System.Windows.Forms.Panel();
-            this.NameBox = new System.Windows.Forms.RichTextBox();
+            this.NameBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.panel2.SuspendLayout();
+            this.panel7.SuspendLayout();
             this.panel6.SuspendLayout();
             this.panel5.SuspendLayout();
             this.panel4.SuspendLayout();
@@ -63,10 +67,24 @@
             // 
             // panel7
             // 
+            this.panel7.Controls.Add(this.button1);
             this.panel7.Location = new System.Drawing.Point(69, 12);
             this.panel7.Name = "panel7";
             this.panel7.Size = new System.Drawing.Size(299, 50);
             this.panel7.TabIndex = 4;
+            this.panel7.Paint += new System.Windows.Forms.PaintEventHandler(this.panel7_Paint);
+            // 
+            // button1
+            // 
+            this.button1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.button1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 17F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button1.Location = new System.Drawing.Point(0, 4);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(296, 43);
+            this.button1.TabIndex = 0;
+            this.button1.Text = "Đăng ký";
+            this.button1.UseVisualStyleBackColor = false;
             // 
             // panel6
             // 
@@ -90,6 +108,7 @@
             this.BackBtn.TabIndex = 1;
             this.BackBtn.Text = "Quay lại";
             this.BackBtn.UseVisualStyleBackColor = false;
+            this.BackBtn.Click += new System.EventHandler(this.BackBtn_Click);
             // 
             // RegisterBtn
             // 
@@ -119,10 +138,12 @@
             this.PasswordBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.PasswordBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.PasswordBox.Location = new System.Drawing.Point(12, 46);
+            this.PasswordBox.Margin = new System.Windows.Forms.Padding(4);
+            this.PasswordBox.Multiline = true;
             this.PasswordBox.Name = "PasswordBox";
-            this.PasswordBox.Size = new System.Drawing.Size(396, 33);
+            this.PasswordBox.PasswordChar = '•';
+            this.PasswordBox.Size = new System.Drawing.Size(487, 32);
             this.PasswordBox.TabIndex = 4;
-            this.PasswordBox.Text = "";
             this.PasswordBox.TextChanged += new System.EventHandler(this.PasswordBox_TextChanged);
             // 
             // label3
@@ -152,10 +173,12 @@
             this.UsernameBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.UsernameBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.UsernameBox.Location = new System.Drawing.Point(12, 49);
+            this.UsernameBox.Margin = new System.Windows.Forms.Padding(4);
+            this.UsernameBox.Multiline = true;
             this.UsernameBox.Name = "UsernameBox";
-            this.UsernameBox.Size = new System.Drawing.Size(396, 33);
+            this.UsernameBox.Size = new System.Drawing.Size(396, 32);
             this.UsernameBox.TabIndex = 3;
-            this.UsernameBox.Text = "";
+            this.UsernameBox.TextChanged += new System.EventHandler(this.UsernameBox_TextChanged);
             // 
             // label2
             // 
@@ -185,6 +208,7 @@
             this.NameBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.NameBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.NameBox.Location = new System.Drawing.Point(16, 51);
+            this.NameBox.Multiline = true;
             this.NameBox.Name = "NameBox";
             this.NameBox.Size = new System.Drawing.Size(396, 33);
             this.NameBox.TabIndex = 2;
@@ -209,6 +233,7 @@
             this.Controls.Add(this.panel2);
             this.Name = "FormRegister";
             this.panel2.ResumeLayout(false);
+            this.panel7.ResumeLayout(false);
             this.panel6.ResumeLayout(false);
             this.panel5.ResumeLayout(false);
             this.panel5.PerformLayout();
@@ -241,10 +266,11 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.RichTextBox NameBox;
+        private System.Windows.Forms.TextBox NameBox;
         private System.Windows.Forms.Button BackBtn;
         private System.Windows.Forms.Button RegisterBtn;
-        private System.Windows.Forms.RichTextBox PasswordBox;
-        private System.Windows.Forms.RichTextBox UsernameBox;
+        private System.Windows.Forms.TextBox PasswordBox;
+        private System.Windows.Forms.TextBox UsernameBox;
+        private System.Windows.Forms.Button button1;
     }
 }

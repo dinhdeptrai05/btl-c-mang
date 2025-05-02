@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -28,6 +29,10 @@ namespace Client.Core
         public int UserId { get; set; }
         public string Username { get; set; }
         public string Name { get; set; }
+
+        public Image Avatar { get; set; }
+
+        public string avatar_url { get; set; } = "https://www.w3schools.com/howto/img_avatar.png";
 
         public static AuctionClient gI(string ip = null, int port = 0)
         {

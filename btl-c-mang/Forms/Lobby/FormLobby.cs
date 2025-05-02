@@ -1,484 +1,395 @@
-﻿using Client.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Client.Core;
+using Client.enums;
+using Client.Model;
+using Message = Client.Core.Message;
 
 namespace Client.Forms
 {
     public partial class FormLobby : Form
     {
-        private Panel sidePanel;
-        private Panel headerPanel;
-        private Button homeButton;
-        private Button dashboardButton;
-        private Button auctionsButton;
-        private Button itemsButton;
-        private Button biddersButton;
-        private Button paymentsButton;
-        private Button settingsButton;
-        private Label logoLabel;
-        private Label subLogoLabel;
-        private Label timeLabel;
-        private Label dateLabel;
-        private PictureBox logoBox;
-        private PictureBox userPictureBox;
-        private Label userNameLabel;
-        private Button menuButton;
-        private Button notificationButton;
-        private Timer timer;
-
-        // New auction-specific components
-        private Panel featuredAuctionPanel;
-        private Label featuredLabel;
-        private Label currentBidLabel;
-        private Label timeLeftLabel;
-        private Button bidNowButton;
-        private PictureBox itemImageBox;
-        private Timer auctionTimer;
+        // Timer for auction countdown
         private int secondsLeft = 3600; // 1 hour auction countdown
+
+        private static FormLobby instance;
+
+        public List<Room> rooms = new List<Room>();
+
+        public static FormLobby gI()
+        {
+            return instance;
+        }
 
         public FormLobby()
         {
+            instance = this;
             InitializeComponent();
-            InitializeCustomComponents();
-            StartTimer();
-            StartAuctionTimer();
+            StartTimers();
+            CustomizeDesign();
+
+            // Đăng ký handler nhận danh sách phòng
+            AuctionClient.gI().RegisterHandler(CommandType.getAllRoomsResponse, HandleLoadRoomsResponse);
+
+            // Tải danh sách phòng khi form được khởi tạo
+            LoadRooms();
         }
 
-        private void InitializeComponent()
+        private void StartTimers()
         {
-            this.Text = "Temple Auctions";
-            this.Size = new Size(1000, 600);
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor = Color.FromArgb(45, 45, 65);
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            this.MaximizeBox = true;
-            this.MinimizeBox = true;
-            this.Icon = SystemIcons.Application;
-        }
+            // Start clock timer
+            clockTimer.Start();
 
-        private void InitializeCustomComponents()
-        {
-            // Side Panel
-            sidePanel = new Panel
-            {
-                BackColor = Color.FromArgb(30, 30, 55),
-                Dock = DockStyle.Left,
-                Width = 200
-            };
-            this.Controls.Add(sidePanel);
-
-            // Header Panel
-            headerPanel = new Panel
-            {
-                BackColor = Color.FromArgb(30, 30, 55),
-                Dock = DockStyle.Top,
-                Height = 50
-            };
-            this.Controls.Add(headerPanel);
-
-            // Logo
-            logoLabel = new Label
-            {
-                Text = "TEMPLE",
-                ForeColor = Color.White,
-                Font = new Font("Arial", 20, FontStyle.Bold),
-                Location = new Point(10, 10),
-                AutoSize = true
-            };
-            sidePanel.Controls.Add(logoLabel);
-
-            // Sub Logo
-            subLogoLabel = new Label
-            {
-                Text = "Auctions",
-                ForeColor = Color.FromArgb(255, 128, 171),
-                Font = new Font("Arial", 12, FontStyle.Regular),
-                Location = new Point(120, 17),
-                AutoSize = true
-            };
-            sidePanel.Controls.Add(subLogoLabel);
-
-            // Menu Button
-            menuButton = new Button
-            {
-                Text = "≡",
-                ForeColor = Color.White,
-                Font = new Font("Arial", 20, FontStyle.Bold),
-                FlatStyle = FlatStyle.Flat,
-                Location = new Point(920, 10),
-                Size = new Size(40, 30),
-                BackColor = Color.Transparent
-            };
-            menuButton.FlatAppearance.BorderSize = 0;
-            headerPanel.Controls.Add(menuButton);
-
-            // Notification Button
-            notificationButton = new Button
-            {
-                Text = "🔔",
-                ForeColor = Color.White,
-                Font = new Font("Arial", 15, FontStyle.Bold),
-                FlatStyle = FlatStyle.Flat,
-                Location = new Point(880, 10),
-                Size = new Size(40, 30),
-                BackColor = Color.Transparent
-            };
-            notificationButton.FlatAppearance.BorderSize = 0;
-            headerPanel.Controls.Add(notificationButton);
-
-            // User Picture
-            userPictureBox = new PictureBox
-            {
-                Size = new Size(30, 30),
-                Location = new Point(840, 10),
-                BackColor = Color.FromArgb(255, 128, 171),
-                SizeMode = PictureBoxSizeMode.StretchImage
-            };
-            userPictureBox.Paint += (sender, e) =>
-            {
-                GraphicsPath gp = new GraphicsPath();
-                gp.AddEllipse(0, 0, userPictureBox.Width - 1, userPictureBox.Height - 1);
-                userPictureBox.Region = new Region(gp);
-            };
-            headerPanel.Controls.Add(userPictureBox);
-
-            // User Name
-            userNameLabel = new Label
-            {
-                Text = AuctionClient.gI().Name,
-                ForeColor = Color.NavajoWhite,
-                Font = new Font("Arial", 10, FontStyle.Regular),
-                Location = new Point(750, 17),
-                AutoSize = true
-            };
-            headerPanel.Controls.Add(userNameLabel);
-
-            // Navigation Buttons - Updated for auction system
-            homeButton = CreateNavigationButton("Home", "🏠", 60);
-            dashboardButton = CreateNavigationButton("Dashboard", "📊", 110);
-            auctionsButton = CreateNavigationButton("Auctions", "🔨", 160);
-            itemsButton = CreateNavigationButton("Items", "📦", 210);
-            biddersButton = CreateNavigationButton("Bidders", "👥", 260);
-            paymentsButton = CreateNavigationButton("Payments", "💰", 310);
-            settingsButton = CreateNavigationButton("Settings", "⚙️", 360);
-
-            // Content Area - Logo and Time
-            logoBox = new PictureBox
-            {
-                Size = new Size(300, 100),
-                Location = new Point(350, 60),
-                BackColor = Color.Transparent
-            };
-            logoBox.Paint += (sender, e) =>
-            {
-                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                using (GraphicsPath path = new GraphicsPath())
-                {
-                    // Draw diamond shape
-                    Point[] points = new Point[] {
-                        new Point(50, 0),
-                        new Point(100, 50),
-                        new Point(50, 100),
-                        new Point(0, 50)
-                    };
-                    path.AddPolygon(points);
-
-                    // Fill with gradient
-                    using (LinearGradientBrush brush = new LinearGradientBrush(
-                        new Point(0, 0), new Point(100, 100),
-                        Color.FromArgb(180, 100, 255), Color.FromArgb(255, 128, 171)))
-                    {
-                        e.Graphics.FillPath(brush, path);
-                    }
-
-                    // Draw "T" in the center
-                    using (Font font = new Font("Arial", 30, FontStyle.Bold))
-                    using (SolidBrush textBrush = new SolidBrush(Color.White))
-                    {
-                        e.Graphics.DrawString("T", font, textBrush, new PointF(35, 25));
-                    }
-                }
-
-                // Draw the text
-                using (Font font = new Font("Arial", 30, FontStyle.Bold))
-                using (SolidBrush textBrush = new SolidBrush(Color.White))
-                {
-                    e.Graphics.DrawString("TEMPLE", font, textBrush, new PointF(110, 20));
-                }
-
-                using (Font font = new Font("Arial", 18, FontStyle.Regular))
-                using (SolidBrush textBrush = new SolidBrush(Color.FromArgb(255, 128, 171)))
-                {
-                    e.Graphics.DrawString("Auctions", font, textBrush, new PointF(110, 60));
-                }
-            };
-            this.Controls.Add(logoBox);
-
-            // Time Label
-            timeLabel = new Label
-            {
-                Text = "19:12:06",
-                ForeColor = Color.White,
-                Font = new Font("Arial", 14, FontStyle.Bold),
-                Location = new Point(815, 60),
-                AutoSize = true,
-                BackColor = Color.Transparent
-            };
-            this.Controls.Add(timeLabel);
-
-            // Date Label
-            dateLabel = new Label
-            {
-                Text = "Thursday, December 19, 2019",
-                ForeColor = Color.White,
-                Font = new Font("Arial", 10, FontStyle.Regular),
-                Location = new Point(760, 80),
-                AutoSize = true,
-                BackColor = Color.Transparent
-            };
-            this.Controls.Add(dateLabel);
-
-            // Featured Auction Panel - New component
-            featuredAuctionPanel = new Panel
-            {
-                BackColor = Color.FromArgb(40, 40, 70),
-                Location = new Point(220, 170),
-                Size = new Size(760, 380),
-                BorderStyle = BorderStyle.None
-            };
-            this.Controls.Add(featuredAuctionPanel);
-
-            // Featured Label
-            featuredLabel = new Label
-            {
-                Text = "Featured Auction: Vintage Gold Watch",
-                ForeColor = Color.White,
-                Font = new Font("Arial", 18, FontStyle.Bold),
-                Location = new Point(20, 20),
-                AutoSize = true
-            };
-            featuredAuctionPanel.Controls.Add(featuredLabel);
-
-            // Current Bid Label
-            currentBidLabel = new Label
-            {
-                Text = "Current Bid: $1,250.00",
-                ForeColor = Color.FromArgb(255, 215, 0), // Gold color
-                Font = new Font("Arial", 24, FontStyle.Bold),
-                Location = new Point(20, 70),
-                AutoSize = true
-            };
-            featuredAuctionPanel.Controls.Add(currentBidLabel);
-
-            // Time Left Label
-            timeLeftLabel = new Label
-            {
-                Text = "Time Left: 01:00:00",
-                ForeColor = Color.White,
-                Font = new Font("Arial", 16, FontStyle.Regular),
-                Location = new Point(20, 120),
-                AutoSize = true
-            };
-            featuredAuctionPanel.Controls.Add(timeLeftLabel);
-
-            // Bid Now Button
-            bidNowButton = new Button
-            {
-                Text = "Place Bid",
-                ForeColor = Color.White,
-                Font = new Font("Arial", 14, FontStyle.Bold),
-                FlatStyle = FlatStyle.Flat,
-                Location = new Point(20, 170),
-                Size = new Size(150, 40),
-                BackColor = Color.FromArgb(255, 128, 171)
-            };
-            bidNowButton.FlatAppearance.BorderSize = 0;
-            bidNowButton.Click += (sender, e) =>
-            {
-                // Simulate bid increment
-                string currentBid = currentBidLabel.Text.Replace("Current Bid: $", "").Replace(",", "");
-                if (double.TryParse(currentBid, out double bidAmount))
-                {
-                    bidAmount += 50;
-                    currentBidLabel.Text = $"Current Bid: ${bidAmount:N2}";
-                }
-
-                // Flash the bid amount to indicate change
-                FlashBidAmount();
-            };
-            featuredAuctionPanel.Controls.Add(bidNowButton);
-
-            // Item Image Box
-            itemImageBox = new PictureBox
-            {
-                Size = new Size(300, 300),
-                Location = new Point(430, 40),
-                BackColor = Color.FromArgb(50, 50, 80),
-                BorderStyle = BorderStyle.FixedSingle
-            };
-            itemImageBox.Paint += (sender, e) =>
-            {
-                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-                // Draw a placeholder watch image
-                using (Pen pen = new Pen(Color.Gold, 3))
-                {
-                    // Watch case
-                    e.Graphics.DrawEllipse(pen, 100, 100, 100, 100);
-
-                    // Watch hands
-                    e.Graphics.DrawLine(pen, 150, 150, 150, 110);
-                    e.Graphics.DrawLine(pen, 150, 150, 180, 150);
-
-                    // Watch band
-                    e.Graphics.DrawLine(pen, 150, 100, 150, 70);
-                    e.Graphics.DrawLine(pen, 150, 200, 150, 230);
-                }
-
-                // Draw "Vintage Gold Watch" text
-                using (Font font = new Font("Arial", 14, FontStyle.Bold))
-                using (SolidBrush brush = new SolidBrush(Color.White))
-                {
-                    e.Graphics.DrawString("Vintage Gold Watch", font, brush, new PointF(80, 250));
-                }
-            };
-            featuredAuctionPanel.Controls.Add(itemImageBox);
-
-            // Add bid history
-            Label bidHistoryLabel = new Label
-            {
-                Text = "Recent Bids:",
-                ForeColor = Color.White,
-                Font = new Font("Arial", 12, FontStyle.Bold),
-                Location = new Point(20, 230),
-                AutoSize = true
-            };
-            featuredAuctionPanel.Controls.Add(bidHistoryLabel);
-
-            // Sample bid history entries
-            string[] bidders = { "User_4521", "Premium_Bidder", "Collector99", "AuctionKing" };
-            double[] amounts = { 1200, 1150, 1100, 1050 };
-
-            for (int i = 0; i < bidders.Length; i++)
-            {
-                Label bidEntry = new Label
-                {
-                    Text = $"{bidders[i]}: ${amounts[i]:N2}",
-                    ForeColor = Color.LightGray,
-                    Font = new Font("Arial", 10, FontStyle.Regular),
-                    Location = new Point(20, 260 + (i * 25)),
-                    AutoSize = true
-                };
-                featuredAuctionPanel.Controls.Add(bidEntry);
-            }
-        }
-
-        private void FlashBidAmount()
-        {
-            // Create a simple animation to flash the bid amount when changed
-            Color originalColor = currentBidLabel.ForeColor;
-            Timer flashTimer = new Timer { Interval = 100 };
-            int flashCount = 0;
-
-            flashTimer.Tick += (s, e) =>
-            {
-                if (flashCount % 2 == 0)
-                {
-                    currentBidLabel.ForeColor = Color.White;
-                }
-                else
-                {
-                    currentBidLabel.ForeColor = originalColor;
-                }
-
-                flashCount++;
-                if (flashCount >= 6)
-                {
-                    currentBidLabel.ForeColor = originalColor;
-                    flashTimer.Stop();
-                }
-            };
-
-            flashTimer.Start();
-        }
-
-        private Button CreateNavigationButton(string text, string icon, int topPosition)
-        {
-            Button button = new Button
-            {
-                Text = $" {icon} {text}",
-                ForeColor = Color.White,
-                Font = new Font("Arial", 12, FontStyle.Regular),
-                FlatStyle = FlatStyle.Flat,
-                Location = new Point(0, topPosition),
-                Size = new Size(200, 40),
-                TextAlign = ContentAlignment.MiddleLeft,
-                BackColor = Color.Transparent
-            };
-            button.FlatAppearance.BorderSize = 0;
-            button.FlatAppearance.MouseOverBackColor = Color.FromArgb(45, 45, 65);
-            button.Padding = new Padding(10, 0, 0, 0);
-            sidePanel.Controls.Add(button);
-            return button;
-        }
-
-        private void StartTimer()
-        {
-            timer = new Timer
-            {
-                Interval = 1000
-            };
-            timer.Tick += (sender, e) =>
-            {
-                DateTime now = DateTime.Now;
-                timeLabel.Text = now.ToString("HH:mm:ss");
-                dateLabel.Text = now.ToString("dddd, MMMM d, yyyy");
-            };
-            timer.Start();
-        }
-
-        private void StartAuctionTimer()
-        {
-            auctionTimer = new Timer
-            {
-                Interval = 1000
-            };
-            auctionTimer.Tick += (sender, e) =>
-            {
-                secondsLeft--;
-                if (secondsLeft <= 0)
-                {
-                    timeLeftLabel.Text = "Auction Ended";
-                    bidNowButton.Enabled = false;
-                    bidNowButton.BackColor = Color.Gray;
-                    auctionTimer.Stop();
-                }
-                else
-                {
-                    int hours = secondsLeft / 3600;
-                    int minutes = (secondsLeft % 3600) / 60;
-                    int seconds = secondsLeft % 60;
-                    timeLeftLabel.Text = $"Time Left: {hours:D2}:{minutes:D2}:{seconds:D2}";
-
-                    // Make the time flash red when less than 5 minutes
-                    if (secondsLeft < 300)
-                    {
-                        timeLeftLabel.ForeColor = secondsLeft % 2 == 0 ? Color.Red : Color.White;
-                    }
-                }
-            };
+            // Start auction timer
             auctionTimer.Start();
         }
 
+        private async void CustomizeDesign()
+        {
+            // Set user name from client
+            userNameLabel.Text = AuctionClient.gI().Name;
+
+            if (AuctionClient.gI().avatar_url != null && AuctionClient.gI().avatar_url != "")
+            {
+                userPictureUrl = AuctionClient.gI().avatar_url;
+            }
+            else
+            {
+                userPictureUrl = "https://www.w3schools.com/howto/img_avatar.png";
+            }
+
+            // Configure menu buttons hover effect
+            foreach (Control control in sidePanel.Controls)
+            {
+                if (control is Button button)
+                {
+                    button.FlatAppearance.MouseOverBackColor = Color.FromArgb(45, 45, 65);
+                }
+            }
+
+            // Add drawing for user picture (circle)
+            LoadAndRenderUserPicture(userPictureUrl);
+        }
+
+        private async Task<bool> LoadRooms()
+        {
+            try
+            {
+                Console.WriteLine("Đang gửi yêu cầu lấy danh sách phòng...");
+                Message msg = new Message(CommandType.getAllRooms);
+                AuctionClient.SendMessage(msg);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi lấy danh sách các phòng: {ex}");
+                MessageBox.Show($"Lỗi khi lấy danh sách các phòng: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+        }
+
+        private void clockTimer_Tick(object sender, EventArgs e)
+        {
+            DateTime now = DateTime.Now;
+            timeLabel.Text = now.ToString("HH:mm:ss");
+            dateLabel.Text = now.ToString("dddd, MMMM d, yyyy");
+        }
+
+        private void auctionTimer_Tick(object sender, EventArgs e)
+        {
+            secondsLeft--;
+            if (secondsLeft < 0)
+            {
+                secondsLeft = 3600; // Reset về 1 giờ
+            }
+
+            int hours = secondsLeft / 3600;
+            int minutes = (secondsLeft % 3600) / 60;
+            int seconds = secondsLeft % 60;
+
+            // Cập nhật hiển thị thời gian đấu giá nếu có control
+            if (Controls.Find("auctionTimerLabel", true).Length > 0)
+            {
+                Label auctionTimerLabel = (Label)Controls.Find("auctionTimerLabel", true)[0];
+                auctionTimerLabel.Text = $"{hours:00}:{minutes:00}:{seconds:00}";
+            }
+        }
+
+        private async void LoadAndRenderUserPicture(string imageUrl)
+        {
+            try
+            {
+                // Tải hình ảnh từ URL
+                Image userImage = await Utils.Utils.LoadUserPicture(imageUrl);
+
+                if (userImage != null)
+                {
+                    userPictureBox.Image = userImage;
+
+                    userPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+
+                    GraphicsPath gp = new GraphicsPath();
+                    gp.AddEllipse(0, 0, userPictureBox.Width - 1, userPictureBox.Height - 1);
+                    userPictureBox.Region = new Region(gp);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi tải ảnh đại diện: {ex}");
+                MessageBox.Show($"Error rendering user picture: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void dashboardButton_Click(object sender, EventArgs e)
+        {
+            // Làm mới danh sách phòng khi click vào dashboard
+            LoadRooms();
+        }
+
+        private void userNameLabel_Click(object sender, EventArgs e)
+        {
+            // Xử lý sự kiện click vào tên người dùng
+        }
+
+        private void userPictureBox_Click(object sender, EventArgs e)
+        {
+            // Xử lý sự kiện click vào ảnh đại diện
+        }
+
+        public void HandleLoadRoomsResponse(Message message)
+        {
+            try
+            {
+                rooms.Clear(); // Xóa danh sách phòng cũ
+                int roomCount = message.ReadInt();
+
+                for (int i = 0; i < roomCount; i++)
+                {
+                    int id = message.ReadInt();
+                    int owner_id = message.ReadInt();
+                    int isOpen = message.ReadInt();
+                    string name = message.ReadUTF();
+                    string time_created = message.ReadUTF();
+
+                    Room room = new Room(id, name, owner_id, isOpen);
+                    room.TimeCreated = time_created;
+                    rooms.Add(room);
+                }
+
+                // Cập nhật giao diện hiển thị danh sách phòng
+                // Sử dụng Invoke để đảm bảo cập nhật UI trên thread chính
+                this.Invoke(new Action(DisplayRooms));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi xử lý danh sách phòng: {ex}");
+            }
+        }
+
+        private void DisplayRooms()
+        {
+            try
+            {
+                // Kiểm tra xem panel đã được tạo chưa
+                if (roomsPanel == null)
+                {
+                    Console.WriteLine("Panel hiển thị phòng chưa được khởi tạo");
+                    return;
+                }
+
+                // Xóa tất cả các phòng hiện tại trong panel
+                roomsPanel.Controls.Clear();
+                Console.WriteLine("Đã xóa các control cũ trong panel");
+
+                // Thêm các phòng mới vào panel
+                Console.WriteLine($"Đang hiển thị {rooms.Count} phòng");
+                foreach (Room room in rooms)
+                {
+                    // Tạo một panel cho mỗi phòng
+                    Panel roomPanel = CreateRoomPanel(room);
+                    roomsPanel.Controls.Add(roomPanel);
+                    Console.WriteLine($"Đã thêm phòng {room.Name} vào panel");
+                }
+
+                // Nếu không có phòng nào, hiển thị thông báo
+                if (rooms.Count == 0)
+                {
+                    Label noRoomsLabel = new Label
+                    {
+                        Text = "Không có phòng nào. Hãy tạo phòng mới!",
+                        AutoSize = true,
+                        ForeColor = Color.White,
+                        Font = new Font("Segoe UI", 12),
+                        Padding = new Padding(20)
+                    };
+                    roomsPanel.Controls.Add(noRoomsLabel);
+                    Console.WriteLine("Không có phòng nào để hiển thị");
+                }
+
+                // Cập nhật panel
+                roomsPanel.Refresh();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi hiển thị danh sách phòng: {ex}");
+            }
+        }
+
+        private Panel CreateRoomPanel(Room room)
+        {
+            // Tạo panel cho một phòng
+            Panel panel = new Panel
+            {
+                Width = 220,
+                Height = 170,
+                Margin = new Padding(15),
+                BackColor = Color.FromArgb(45, 45, 65),
+                BorderStyle = BorderStyle.None
+            };
+
+            // Tạo hiệu ứng bo góc cho panel
+            panel.Paint += (sender, e) =>
+            {
+                using (GraphicsPath path = new GraphicsPath())
+                {
+                    int radius = 10;
+                    Rectangle rect = new Rectangle(0, 0, panel.Width, panel.Height);
+                    path.AddArc(rect.X, rect.Y, radius * 2, radius * 2, 180, 90);
+                    path.AddArc(rect.X + rect.Width - radius * 2, rect.Y, radius * 2, radius * 2, 270, 90);
+                    path.AddArc(rect.X + rect.Width - radius * 2, rect.Y + rect.Height - radius * 2, radius * 2, radius * 2, 0, 90);
+                    path.AddArc(rect.X, rect.Y + rect.Height - radius * 2, radius * 2, radius * 2, 90, 90);
+                    path.CloseFigure();
+                    e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                    panel.Region = new Region(path);
+                }
+            };
+
+            // Tên phòng
+            Label nameLabel = new Label
+            {
+                Text = room.Name,
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = Color.White,
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Width = panel.Width - 20,
+                Height = 30,
+                Location = new Point(10, 15)
+            };
+
+            // Trạng thái phòng
+            Label statusLabel = new Label
+            {
+                Text = room.isOpen == 1 ? "Đang mở" : "Đã đóng",
+                Font = new Font("Segoe UI", 9),
+                ForeColor = room.isOpen == 1 ? Color.LightGreen : Color.LightCoral,
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Width = panel.Width - 20,
+                Height = 20,
+                Location = new Point(10, 45)
+            };
+
+            // ID phòng
+            Label idLabel = new Label
+            {
+                Text = $"ID: {room.Id}",
+                Font = new Font("Segoe UI", 9),
+                ForeColor = Color.LightGray,
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Width = panel.Width - 20,
+                Height = 20,
+                Location = new Point(10, 70)
+            };
+
+            // Chủ phòng
+            Label ownerLabel = new Label
+            {
+                Text = $"Chủ phòng: {room.OwnerId}",
+                Font = new Font("Segoe UI", 9),
+                ForeColor = Color.LightGray,
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Width = panel.Width - 20,
+                Height = 20,
+                Location = new Point(10, 90)
+            };
+
+            // Thời gian tạo
+            if (room.TimeCreated != null)
+            {
+                Label timeLabel = new Label
+                {
+                    Text = $"Thời gian tạo: {room.TimeCreated}",
+                    Font = new Font("Segoe UI", 8),
+                    ForeColor = Color.Silver,
+                    AutoSize = false,
+                    TextAlign = ContentAlignment.MiddleLeft,
+                    Width = panel.Width - 20,
+                    Height = 20,
+                    Location = new Point(10, 110)
+                };
+                panel.Controls.Add(timeLabel);
+            }
+
+            // Nút tham gia phòng
+            Button joinButton = new Button
+            {
+                Text = "Tham gia",
+                FlatStyle = FlatStyle.Flat,
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(80, 100, 170),
+                Width = panel.Width - 60,
+                Height = 30,
+                Location = new Point(30, 135),
+                Cursor = Cursors.Hand
+            };
+
+            joinButton.FlatAppearance.BorderSize = 0;
+            joinButton.Click += (sender, e) => JoinRoom(room);
+
+            // Thêm các control vào panel
+            panel.Controls.Add(nameLabel);
+            panel.Controls.Add(statusLabel);
+            panel.Controls.Add(idLabel);
+            panel.Controls.Add(ownerLabel);
+            panel.Controls.Add(joinButton);
+
+            // Sự kiện click vào panel
+            panel.Click += (sender, e) => JoinRoom(room);
+
+            return panel;
+        }
+
+        private void JoinRoom(Room room)
+        {
+            try
+            {
+                // Kiểm tra xem phòng có mở không
+                if (room.isOpen != 1)
+                {
+                    MessageBox.Show("Phòng này đã đóng, bạn không thể tham gia!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // Gửi yêu cầu tham gia phòng đến server
+                //Message msg = new Message(CommandType.joinRoom);
+                //msg.Writer.WriteInt(room.Id);
+                //AuctionClient.SendMessage(msg);
+
+                // Hiển thị thông báo đang xử lý
+                MessageBox.Show($"Đang tham gia phòng {room.Name}...", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi tham gia phòng: {ex}");
+                MessageBox.Show($"Lỗi khi tham gia phòng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
 }

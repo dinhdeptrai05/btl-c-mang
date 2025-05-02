@@ -1,5 +1,6 @@
 ﻿using System;
 using Client.enums;
+using Client.Forms;
 using Client.Forms.Login;
 using Client.Forms.Register;
 
@@ -21,6 +22,11 @@ namespace Client.Core
                 case CommandType.RegisterResponse:
                     {
                         FormRegister.gI().HandleRegisterResponse(msg);
+                        break;
+                    }
+                case CommandType.getAllRoomsResponse:
+                    {
+                        FormLobby.gI().HandleLoadRoomsResponse(msg);
                         break;
                     }
                 default:

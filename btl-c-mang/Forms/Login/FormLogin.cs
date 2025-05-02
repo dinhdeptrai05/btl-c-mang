@@ -111,11 +111,21 @@ namespace Client.Forms.Login
                 int userId = message.ReadInt();
                 string username = message.ReadUTF();
                 string name = message.ReadUTF();
+                string avatarUrl = message.ReadUTF();
 
                 // Lưu userId nếu cần
                 AuctionClient.gI().UserId = userId;
                 AuctionClient.gI().Username = username;
                 AuctionClient.gI().Name = name;
+
+                if (avatarUrl != null)
+                {
+                    AuctionClient.gI().avatar_url = avatarUrl;
+                }
+                else
+                {
+                    AuctionClient.gI().avatar_url = "https://www.w3schools.com/howto/img_avatar.png";
+                }
 
                 Invoke(new Action(() =>
                 {
@@ -128,9 +138,10 @@ namespace Client.Forms.Login
             }
             else
             {
+                string error = message.ReadUTF();
                 Invoke(new Action(() =>
                 {
-                    MessageBox.Show("Đăng nhập thất bại. Sai tài khoản hoặc mật khẩu.",
+                    MessageBox.Show($"Đăng nhập thất bại. {error}",
                         "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }));
             }
@@ -194,6 +205,11 @@ namespace Client.Forms.Login
         }
 
         private void lblPassword_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtPassword_TextChanged(object sender, EventArgs e)
         {
 
         }

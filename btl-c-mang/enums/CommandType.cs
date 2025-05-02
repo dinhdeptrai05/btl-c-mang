@@ -9,8 +9,9 @@ namespace Client.enums
 
         public const sbyte RegisterResponse = -2;
 
-        public const sbyte GetAllAuctions = 2;
-        public const sbyte PlaceBid = 3;
+        public const sbyte getAllRooms = 2;
+        public const sbyte getAllRoomsResponse = -3;
+
         public const sbyte CreateAuction = 4;
 
         // Từ Server đến Client

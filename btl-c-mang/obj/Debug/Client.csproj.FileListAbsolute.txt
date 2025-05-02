@@ -19,3 +19,4 @@ C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.pdb
 C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\bin\Debug\Client.pdb
 C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.Forms.Login.FormLogin.resources
 C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.Forms.Register.FormRegister.resources
+C:\Users\Windows\Desktop\BT\LT_Mang\BTL\btl-c-mang\obj\Debug\Client.Forms.FormLobby.resources

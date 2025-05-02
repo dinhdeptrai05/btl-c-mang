@@ -9,7 +9,10 @@ namespace AuctionServer
 
         public const sbyte RegisterResponse = -2;
 
-        public const sbyte GetAllAuctions = 2;
+        public const sbyte getAllRoom = 2;
+
+        public const sbyte getAllRoomResponse = -3;
+
         public const sbyte PlaceBid = 3;
         public const sbyte CreateAuction = 4;
 

@@ -63,7 +63,6 @@ namespace Client.Forms.Register
                 {
                     MessageBox.Show($"Đăng ký thành công!)",
                         "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    // Mở form chính tại đây nếu muốn
                     this.Hide();
                     new FormLogin().Show();
                 }));
@@ -85,6 +84,22 @@ namespace Client.Forms.Register
         }
 
         private void PasswordBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void panel7_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void BackBtn_Click(object sender, EventArgs e)
+        {
+            this.Hide();
+            new FormLogin().Show();
+        }
+
+        private void UsernameBox_TextChanged(object sender, EventArgs e)
         {
 
         }
