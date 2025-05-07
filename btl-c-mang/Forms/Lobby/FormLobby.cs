@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Client.Core;
@@ -13,12 +14,10 @@ namespace Client.Forms
 {
     public partial class FormLobby : Form
     {
-        // Timer for auction countdown
-        private int secondsLeft = 3600; // 1 hour auction countdown
-
+        private int secondsLeft = 3600; // 1 hour default auction countdown
         private static FormLobby instance;
-
         public List<Room> rooms = new List<Room>();
+        private Room currentRoom; // Lưu trữ phòng hiện tại để truy cập nhanh
 
         public static FormLobby gI()
         {
@@ -32,28 +31,29 @@ namespace Client.Forms
             StartTimers();
             CustomizeDesign();
 
-            // Đăng ký handler nhận danh sách phòng
-            AuctionClient.gI().RegisterHandler(CommandType.getAllRoomsResponse, HandleLoadRoomsResponse);
+            // Đăng ký handler nhận danh sách phòng và phản hồi tham gia phòng
+            AuctionClient.gI().RegisterHandler(CommandType.getAllRoomResponse, HandleLoadRoomsResponse);
+            AuctionClient.gI().RegisterHandler(CommandType.JoinRoomResponse, HandleJoinRoomResponse);
 
             // Tải danh sách phòng khi form được khởi tạo
             LoadRooms();
+
+            // Gán sự kiện cho các nút
+            placeBidButton.Click += (sender, e) => PlaceBid(GetCurrentItem());
+            leaveRoomButton.Click += (sender, e) => LeaveRoom();
         }
 
         private void StartTimers()
         {
-            // Start clock timer
             clockTimer.Start();
-
-            // Start auction timer
             auctionTimer.Start();
         }
 
         private async void CustomizeDesign()
         {
-            // Set user name from client
-            userNameLabel.Text = AuctionClient.gI().Name;
+            userNameLabel.Text = AuctionClient.gI().Name ?? "Người dùng";
 
-            if (AuctionClient.gI().avatar_url != null && AuctionClient.gI().avatar_url != "")
+            if (!string.IsNullOrEmpty(AuctionClient.gI().avatar_url))
             {
                 userPictureUrl = AuctionClient.gI().avatar_url;
             }
@@ -62,7 +62,6 @@ namespace Client.Forms
                 userPictureUrl = "https://www.w3schools.com/howto/img_avatar.png";
             }
 
-            // Configure menu buttons hover effect
             foreach (Control control in sidePanel.Controls)
             {
                 if (control is Button button)
@@ -71,8 +70,7 @@ namespace Client.Forms
                 }
             }
 
-            // Add drawing for user picture (circle)
-            LoadAndRenderUserPicture(userPictureUrl);
+            await LoadAndRenderUserPicture(userPictureUrl);
         }
 
         private async Task<bool> LoadRooms()
@@ -80,7 +78,7 @@ namespace Client.Forms
             try
             {
                 Console.WriteLine("Đang gửi yêu cầu lấy danh sách phòng...");
-                Message msg = new Message(CommandType.getAllRooms);
+                Message msg = new Message(CommandType.getAllRoom);
                 AuctionClient.SendMessage(msg);
                 return true;
             }
@@ -101,37 +99,31 @@ namespace Client.Forms
 
         private void auctionTimer_Tick(object sender, EventArgs e)
         {
-            secondsLeft--;
-            if (secondsLeft < 0)
+            if (secondsLeft > 0)
             {
-                secondsLeft = 3600; // Reset về 1 giờ
+                secondsLeft--;
+                int hours = secondsLeft / 3600;
+                int minutes = (secondsLeft % 3600) / 60;
+                int seconds = secondsLeft % 60;
+                timeRemainingLabel.Text = $"Thời gian còn lại: {hours:00}:{minutes:00}:{seconds:00}";
             }
-
-            int hours = secondsLeft / 3600;
-            int minutes = (secondsLeft % 3600) / 60;
-            int seconds = secondsLeft % 60;
-
-            // Cập nhật hiển thị thời gian đấu giá nếu có control
-            if (Controls.Find("auctionTimerLabel", true).Length > 0)
+            else
             {
-                Label auctionTimerLabel = (Label)Controls.Find("auctionTimerLabel", true)[0];
-                auctionTimerLabel.Text = $"{hours:00}:{minutes:00}:{seconds:00}";
+                timeRemainingLabel.Text = "Thời gian còn lại: Hết giờ";
+                bidInput.Enabled = false;
+                placeBidButton.Enabled = false;
             }
         }
 
-        private async void LoadAndRenderUserPicture(string imageUrl)
+        private async Task LoadAndRenderUserPicture(string imageUrl)
         {
             try
             {
-                // Tải hình ảnh từ URL
                 Image userImage = await Utils.Utils.LoadUserPicture(imageUrl);
-
                 if (userImage != null)
                 {
                     userPictureBox.Image = userImage;
-
                     userPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
-
                     GraphicsPath gp = new GraphicsPath();
                     gp.AddEllipse(0, 0, userPictureBox.Width - 1, userPictureBox.Height - 1);
                     userPictureBox.Region = new Region(gp);
@@ -144,34 +136,236 @@ namespace Client.Forms
             }
         }
 
+        private async Task LoadAndRenderItemPicture(string imageUrl)
+        {
+            try
+            {
+                Image itemImage = await Utils.Utils.LoadUserPicture(imageUrl);
+                if (itemImage != null)
+                {
+                    itemPictureBox.Image = itemImage;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi tải ảnh vật phẩm: {ex}");
+            }
+        }
+
         private void dashboardButton_Click(object sender, EventArgs e)
         {
-            // Làm mới danh sách phòng khi click vào dashboard
             LoadRooms();
         }
 
         private void userNameLabel_Click(object sender, EventArgs e)
         {
-            // Xử lý sự kiện click vào tên người dùng
+            // Xử lý sự kiện click vào tên người dùng (có thể mở settings)
         }
 
         private void userPictureBox_Click(object sender, EventArgs e)
         {
-            // Xử lý sự kiện click vào ảnh đại diện
+            // Xử lý sự kiện click vào ảnh đại diện (có thể mở settings)
+        }
+
+        private async void SwitchToAuctionInterface(Room room)
+        {
+            try
+            {
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() => SwitchToAuctionInterface(room)));
+                    return;
+                }
+
+                currentRoom = room; // Lưu phòng hiện tại
+                roomsPanel.Visible = false;
+                auctionMainPanel.Visible = true;
+
+                roomNameLabel.Text = $"Phòng đấu giá: {room.Name} (ID: {room.Id})";
+
+                Item currentItem = room.Items?.FirstOrDefault(item => !item.isSold);
+                if (currentItem != null)
+                {
+                    itemNameLabel.Text = currentItem.Name ?? "Không xác định";
+                    itemDescLabel.Text = currentItem.Description ?? "Không có mô tả";
+                    currentPriceLabel.Text = $"Giá hiện tại: {currentItem.LastestBidPrice:N0} VND";
+                    lastBidderLabel.Text = $"Người đấu giá: {(string.IsNullOrEmpty(currentItem.LastestBidderName) ? "Chưa có" : currentItem.LastestBidderName)}";
+                    timeRemainingLabel.Text = $"Thời gian còn lại: {secondsLeft / 3600:00}:{(secondsLeft % 3600) / 60:00}:{secondsLeft % 60:00}";
+                    bidInput.Minimum = (decimal)(currentItem.LastestBidPrice + 100000);
+                    bidInput.Value = bidInput.Minimum;
+                    bidInput.Enabled = true;
+                    placeBidButton.Enabled = true;
+
+                    await LoadAndRenderItemPicture(currentItem.ImageURL ?? "https://via.placeholder.com/360x260");
+                }
+                else
+                {
+                    itemNameLabel.Text = "Không có vật phẩm đang đấu giá";
+                    itemDescLabel.Text = "";
+                    itemPictureBox.Image = null;
+                    currentPriceLabel.Text = "Giá hiện tại: N/A";
+                    lastBidderLabel.Text = "Người đấu giá: N/A";
+                    timeRemainingLabel.Text = "Thời gian còn lại: N/A";
+                    bidInput.Enabled = false;
+                    placeBidButton.Enabled = false;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi chuyển đổi giao diện đấu giá: {ex}");
+                MessageBox.Show($"Lỗi khi chuyển đổi giao diện đấu giá: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+
+        private void LeaveRoom()
+        {
+            try
+            {
+                if (currentRoom == null) return;
+
+                Message msg = new Message(CommandType.LeaveRoom);
+                msg.WriteInt(currentRoom.Id);
+                AuctionClient.SendMessage(msg);
+
+                auctionMainPanel.Visible = false;
+                roomsPanel.Visible = true;
+                LoadRooms();
+                currentRoom = null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi rời phòng: {ex}");
+                MessageBox.Show($"Lỗi khi rời phòng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void PlaceBid(Item item)
+        {
+            try
+            {
+                if (item == null)
+                {
+                    MessageBox.Show("Không có vật phẩm nào để đặt giá!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (bidInput.Value <= (decimal)item.LastestBidPrice)
+                {
+                    MessageBox.Show($"Giá đấu phải lớn hơn giá hiện tại ({item.LastestBidPrice:N0} VND)!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                double bidPrice = (double)bidInput.Value;
+
+                Message msg = new Message(CommandType.PlaceBid);
+                msg.WriteInt(item.Id);
+                msg.WriteDouble(bidPrice);
+                AuctionClient.SendMessage(msg);
+
+                MessageBox.Show("Đã gửi giá đấu thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi đặt giá: {ex}");
+                MessageBox.Show($"Lỗi khi đặt giá: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private Item GetCurrentItem()
+        {
+            try
+            {
+                return currentRoom?.Items?.FirstOrDefault(item => !item.isSold);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi lấy vật phẩm hiện tại: {ex}");
+                return null;
+            }
+        }
+
+        private void JoinRoom(Room room)
+        {
+            try
+            {
+                if (!room.isOpen)
+                {
+                    MessageBox.Show("Phòng này đã đóng, bạn không thể tham gia!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                Message msg = new Message(CommandType.JoinRoom);
+                msg.WriteInt(room.Id);
+                AuctionClient.SendMessage(msg);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi tham gia phòng: {ex}");
+                MessageBox.Show($"Lỗi khi tham gia phòng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        public void HandleJoinRoomResponse(Message message)
+        {
+            try
+            {
+                bool success = message.ReadBoolean();
+                if (!success)
+                {
+                    string errorMessage = message.ReadUTF();
+                    MessageBox.Show(errorMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                int roomId = message.ReadInt();
+                string roomName = message.ReadUTF();
+                int ownerId = message.ReadInt();
+                bool isOpen = message.ReadBoolean();
+                int itemsNum = message.ReadInt();
+
+                // Đọc thời gian còn lại từ server (nếu có)
+                //secondsLeft = message.ReadInt(); // Giả sử server gửi thời gian còn lại (thêm vào giao thức nếu cần)
+
+                List<Item> items = new List<Item>();
+                for (int i = 0; i < itemsNum; i++)
+                {
+                    int itemId = message.ReadInt();
+                    int lastBidderID = message.ReadInt();
+                    string itemName = message.ReadUTF();
+                    string itemDesc = message.ReadUTF();
+                    string imageUrl = message.ReadUTF();
+                    double startPrice = message.ReadDouble();
+                    double buyNowPrice = message.ReadDouble();
+                    double currentPrice = message.ReadDouble();
+                    bool isSold = message.ReadBoolean();
+
+                    items.Add(new Item(itemId, lastBidderID, itemName, itemDesc, imageUrl, startPrice, buyNowPrice, currentPrice, isSold));
+                }
+
+                Room joinedRoom = new Room(roomId, roomName, ownerId, isOpen, items);
+                SwitchToAuctionInterface(joinedRoom);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi xử lý phản hồi tham gia phòng: {ex}");
+                MessageBox.Show($"Lỗi khi tham gia phòng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         public void HandleLoadRoomsResponse(Message message)
         {
             try
             {
-                rooms.Clear(); // Xóa danh sách phòng cũ
+                rooms.Clear();
                 int roomCount = message.ReadInt();
 
                 for (int i = 0; i < roomCount; i++)
                 {
                     int id = message.ReadInt();
                     int owner_id = message.ReadInt();
-                    int isOpen = message.ReadInt();
+                    bool isOpen = message.ReadBoolean();
                     string name = message.ReadUTF();
                     string time_created = message.ReadUTF();
 
@@ -180,9 +374,14 @@ namespace Client.Forms
                     rooms.Add(room);
                 }
 
-                // Cập nhật giao diện hiển thị danh sách phòng
-                // Sử dụng Invoke để đảm bảo cập nhật UI trên thread chính
-                this.Invoke(new Action(DisplayRooms));
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(DisplayRooms));
+                }
+                else
+                {
+                    DisplayRooms();
+                }
             }
             catch (Exception ex)
             {
@@ -194,28 +393,14 @@ namespace Client.Forms
         {
             try
             {
-                // Kiểm tra xem panel đã được tạo chưa
-                if (roomsPanel == null)
-                {
-                    Console.WriteLine("Panel hiển thị phòng chưa được khởi tạo");
-                    return;
-                }
-
-                // Xóa tất cả các phòng hiện tại trong panel
                 roomsPanel.Controls.Clear();
-                Console.WriteLine("Đã xóa các control cũ trong panel");
 
-                // Thêm các phòng mới vào panel
-                Console.WriteLine($"Đang hiển thị {rooms.Count} phòng");
                 foreach (Room room in rooms)
                 {
-                    // Tạo một panel cho mỗi phòng
                     Panel roomPanel = CreateRoomPanel(room);
                     roomsPanel.Controls.Add(roomPanel);
-                    Console.WriteLine($"Đã thêm phòng {room.Name} vào panel");
                 }
 
-                // Nếu không có phòng nào, hiển thị thông báo
                 if (rooms.Count == 0)
                 {
                     Label noRoomsLabel = new Label
@@ -227,10 +412,8 @@ namespace Client.Forms
                         Padding = new Padding(20)
                     };
                     roomsPanel.Controls.Add(noRoomsLabel);
-                    Console.WriteLine("Không có phòng nào để hiển thị");
                 }
 
-                // Cập nhật panel
                 roomsPanel.Refresh();
             }
             catch (Exception ex)
@@ -241,7 +424,6 @@ namespace Client.Forms
 
         private Panel CreateRoomPanel(Room room)
         {
-            // Tạo panel cho một phòng
             Panel panel = new Panel
             {
                 Width = 220,
@@ -251,7 +433,6 @@ namespace Client.Forms
                 BorderStyle = BorderStyle.None
             };
 
-            // Tạo hiệu ứng bo góc cho panel
             panel.Paint += (sender, e) =>
             {
                 using (GraphicsPath path = new GraphicsPath())
@@ -268,7 +449,6 @@ namespace Client.Forms
                 }
             };
 
-            // Tên phòng
             Label nameLabel = new Label
             {
                 Text = room.Name,
@@ -281,12 +461,11 @@ namespace Client.Forms
                 Location = new Point(10, 15)
             };
 
-            // Trạng thái phòng
             Label statusLabel = new Label
             {
-                Text = room.isOpen == 1 ? "Đang mở" : "Đã đóng",
+                Text = room.isOpen ? "Đang mở" : "Đã đóng",
                 Font = new Font("Segoe UI", 9),
-                ForeColor = room.isOpen == 1 ? Color.LightGreen : Color.LightCoral,
+                ForeColor = room.isOpen ? Color.LightGreen : Color.LightCoral,
                 AutoSize = false,
                 TextAlign = ContentAlignment.MiddleCenter,
                 Width = panel.Width - 20,
@@ -294,7 +473,6 @@ namespace Client.Forms
                 Location = new Point(10, 45)
             };
 
-            // ID phòng
             Label idLabel = new Label
             {
                 Text = $"ID: {room.Id}",
@@ -307,7 +485,6 @@ namespace Client.Forms
                 Location = new Point(10, 70)
             };
 
-            // Chủ phòng
             Label ownerLabel = new Label
             {
                 Text = $"Chủ phòng: {room.OwnerId}",
@@ -320,7 +497,6 @@ namespace Client.Forms
                 Location = new Point(10, 90)
             };
 
-            // Thời gian tạo
             if (room.TimeCreated != null)
             {
                 Label timeLabel = new Label
@@ -337,7 +513,6 @@ namespace Client.Forms
                 panel.Controls.Add(timeLabel);
             }
 
-            // Nút tham gia phòng
             Button joinButton = new Button
             {
                 Text = "Tham gia",
@@ -353,43 +528,20 @@ namespace Client.Forms
             joinButton.FlatAppearance.BorderSize = 0;
             joinButton.Click += (sender, e) => JoinRoom(room);
 
-            // Thêm các control vào panel
             panel.Controls.Add(nameLabel);
             panel.Controls.Add(statusLabel);
             panel.Controls.Add(idLabel);
             panel.Controls.Add(ownerLabel);
             panel.Controls.Add(joinButton);
 
-            // Sự kiện click vào panel
             panel.Click += (sender, e) => JoinRoom(room);
 
             return panel;
         }
 
-        private void JoinRoom(Room room)
+        private void settingsButton_Click(object sender, EventArgs e)
         {
-            try
-            {
-                // Kiểm tra xem phòng có mở không
-                if (room.isOpen != 1)
-                {
-                    MessageBox.Show("Phòng này đã đóng, bạn không thể tham gia!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
-
-                // Gửi yêu cầu tham gia phòng đến server
-                //Message msg = new Message(CommandType.joinRoom);
-                //msg.Writer.WriteInt(room.Id);
-                //AuctionClient.SendMessage(msg);
-
-                // Hiển thị thông báo đang xử lý
-                MessageBox.Show($"Đang tham gia phòng {room.Name}...", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Lỗi khi tham gia phòng: {ex}");
-                MessageBox.Show($"Lỗi khi tham gia phòng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            // Xử lý sự kiện mở settings
         }
     }
 }

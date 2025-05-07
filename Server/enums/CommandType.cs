@@ -5,24 +5,18 @@ namespace AuctionServer
         // Từ Client đến Server
         public const sbyte Login = 1;
 
-        public const sbyte Register = -1;
+        public const sbyte Register = 2;
 
-        public const sbyte RegisterResponse = -2;
+        public const sbyte getAllRoom = 3;
 
-        public const sbyte getAllRoom = 2;
-
-        public const sbyte getAllRoomResponse = -3;
-
-        public const sbyte PlaceBid = 3;
-        public const sbyte CreateAuction = 4;
+        public const sbyte JoinRoom = 4;
 
         // Từ Server đến Client
-        public const sbyte Welcome = 101;
-        public const sbyte LoginResponse = 102;
-        public const sbyte AllAuctionsResponse = 103;
-        public const sbyte BidResponse = 104;
-        public const sbyte NewAuction = 105;
-        public const sbyte AuctionUpdate = 106;
-        public const sbyte CreateAuctionResponse = 107;
+        public const sbyte LoginResponse = -1;
+        public const sbyte RegisterResponse = -2;
+        public const sbyte getAllRoomResponse = -3;
+
+        public const sbyte JoinRoomResponse = -4;
+
     }
 }

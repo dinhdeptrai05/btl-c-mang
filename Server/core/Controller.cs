@@ -26,6 +26,9 @@ namespace AuctionServer
                     case CommandType.getAllRoom:
                         HandleGetAllRoom(message, session);
                         break;
+                    case CommandType.JoinRoom:
+                        HandleJoinRoom(message, session);
+                        break;
                     default:
                         Console.WriteLine($"Nhận được command không xác định: {commandId}");
                         break;
@@ -34,6 +37,85 @@ namespace AuctionServer
             catch (Exception ex)
             {
                 Console.WriteLine($"Lỗi khi xử lý message: {ex.Message}");
+            }
+        }
+
+        private static void HandleJoinRoom(Message message, ClientSession session)
+        {
+            int roomId = message.ReadInt();
+            Console.WriteLine($"Nhận được yêu cầu tham gia phòng đấu giá với ID: {roomId}");
+
+            try
+            {
+                string query = "SELECT * FROM rooms WHERE id = @param0";
+                DataTable result = database.ExecuteQuery(query, roomId);
+
+                if (result.Rows.Count > 0)
+                {
+                    DataRow row = result.Rows[0];
+                    string roomName = row["name"].ToString();
+                    int ownerId = Convert.ToInt32(row["owner_id"]);
+                    bool isOpen = Convert.ToBoolean(row["is_open"]);
+                    string itemsJson = row["items"].ToString(); // Lấy danh sách items dưới dạng JSON
+
+                    // Phân tích cú pháp JSON để chuyển đổi thành danh sách các đối tượng Item
+                    var items = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Item>>(itemsJson);
+                    foreach (var item in items)
+                    {
+                        // Console.WriteLine(item.Id);
+                        // Console.WriteLine(item.Name);
+                        // Console.WriteLine(item.Description);
+                        // Console.WriteLine(item.ImageUrl);
+                        // Console.WriteLine(item.LatestBidderId);
+                        // Console.WriteLine(item.LatestBidPrice);
+                        // Console.WriteLine(item.StartingPrice);
+                        Console.WriteLine(item.ToString());
+
+                    }
+
+                    // Tạo response để gửi về client
+                    var response = new Message(CommandType.JoinRoomResponse);
+                    response.WriteBoolean(true); // Tham gia phòng thành công
+
+                    response.WriteInt(roomId);
+                    response.WriteUTF(roomName);
+                    response.WriteInt(ownerId);
+                    response.WriteBoolean(isOpen);
+                    response.WriteInt(items.Count);
+
+                    foreach (var item in items)
+                    {
+                        response.WriteInt(item.Id);
+                        response.WriteInt(item.LatestBidderId);
+                        response.WriteUTF(item.Name);
+                        response.WriteUTF(item.Description);
+                        response.WriteUTF(item.ImageUrl);
+                        response.WriteDouble(item.StartingPrice);
+                        response.WriteDouble(item.BuyNowPrice);
+                        response.WriteDouble(item.LatestBidPrice);
+                        response.WriteBoolean(item.IsSold);
+                    }
+
+                    // Gửi response về client
+                    session.SendMessage(response);
+                }
+                else
+                {
+                    // Không tìm thấy phòng
+                    Console.WriteLine("Không tìm thấy phòng đấu giá với ID đã cho.");
+                    var response = new Message(CommandType.JoinRoomResponse);
+                    response.WriteBoolean(false); // Tham gia phòng thất bại
+                    response.WriteUTF("Không tìm thấy phòng đấu giá.");
+                    session.SendMessage(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi tham gia phòng đấu giá: {ex.Message}");
+                var response = new Message(CommandType.JoinRoomResponse);
+                response.WriteBoolean(false); // Tham gia phòng thất bại
+                response.WriteUTF($"Lỗi khi tham gia phòng đấu giá: {ex.Message}");
+                session.SendMessage(response);
             }
         }
 
@@ -55,7 +137,7 @@ namespace AuctionServer
                     DataRow row = result.Rows[i];
                     response.WriteInt(Convert.ToInt32(row["id"]));
                     response.WriteInt(Convert.ToInt32(row["owner_id"]));
-                    response.WriteInt(Convert.ToInt32(row["is_open"]));
+                    response.WriteBoolean(Convert.ToBoolean(row["is_open"]));
                     response.WriteUTF(row["name"].ToString());
                     response.WriteUTF(row["time_created"].ToString());
                 }

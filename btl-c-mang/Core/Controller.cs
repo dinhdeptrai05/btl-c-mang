@@ -24,9 +24,14 @@ namespace Client.Core
                         FormRegister.gI().HandleRegisterResponse(msg);
                         break;
                     }
-                case CommandType.getAllRoomsResponse:
+                case CommandType.getAllRoomResponse:
                     {
                         FormLobby.gI().HandleLoadRoomsResponse(msg);
+                        break;
+                    }
+                case CommandType.JoinRoomResponse:
+                    {
+                        FormLobby.gI().HandleJoinRoomResponse(msg);
                         break;
                     }
                 default:
