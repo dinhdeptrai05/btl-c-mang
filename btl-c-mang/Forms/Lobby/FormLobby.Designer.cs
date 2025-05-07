@@ -350,6 +350,8 @@
             this.rightPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(50)))));
             this.rightPanel.Controls.Add(this.auctionInfoPanel);
             this.rightPanel.Controls.Add(this.chatPanel);
+            this.rightPanel.Controls.Add(this.chatPanel);
+
             this.rightPanel.Dock = System.Windows.Forms.DockStyle.Right;
             this.rightPanel.Location = new System.Drawing.Point(400, 60);
             this.rightPanel.Name = "rightPanel";
@@ -366,7 +368,6 @@
             this.auctionInfoPanel.Controls.Add(this.timeRemainingLabel);
             this.auctionInfoPanel.Controls.Add(this.bidInput);
             this.auctionInfoPanel.Controls.Add(this.placeBidButton);
-            this.auctionInfoPanel.Controls.Add(this.chatPanel);
             this.auctionInfoPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.auctionInfoPanel.Location = new System.Drawing.Point(0, 0);
             this.auctionInfoPanel.Name = "auctionInfoPanel";
@@ -440,8 +441,8 @@
             this.chatPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(60)))));
             this.chatPanel.Controls.Add(this.chatContainerPanel);
             this.chatPanel.Controls.Add(this.chatHeaderLabel);
-            this.chatPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chatPanel.Location = new System.Drawing.Point(0, 220);
+            this.chatPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.chatPanel.Location = new System.Drawing.Point(400, 60);
             this.chatPanel.Name = "chatPanel";
             this.chatPanel.Padding = new System.Windows.Forms.Padding(20);
             this.chatPanel.Size = new System.Drawing.Size(645, 348);
