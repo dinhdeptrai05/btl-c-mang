@@ -112,7 +112,7 @@ namespace AuctionServer
                     response.WriteBoolean(isOpen);
                     response.WriteInt(items.Count);
 
-                    foreach (var item in items)
+                    foreach (Item item in items)
                     {
                         response.WriteInt(item.Id);
                         response.WriteInt(item.LatestBidderId);
@@ -123,6 +123,7 @@ namespace AuctionServer
                         response.WriteDouble(item.BuyNowPrice);
                         response.WriteDouble(item.LatestBidPrice);
                         response.WriteBoolean(item.IsSold);
+                        response.WriteUTF(item.EndTime.ToString("HH:mm:ss dd/MM/yyyy"));
                     }
                     response.WriteInt(chats.Count);
                     foreach (var chat in chats)

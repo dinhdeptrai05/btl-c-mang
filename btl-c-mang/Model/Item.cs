@@ -31,7 +31,7 @@ namespace Client.Model
         }
 
         public Item(int id, int lastestBidderId, string name, string description, string imgURL, double startingPrice, double buyNowPrice,
-            double LastestBidPrice, bool isSold)
+            double LastestBidPrice, bool isSold, DateTime endTime)
         {
             Id = id;
             Name = name;
@@ -42,7 +42,7 @@ namespace Client.Model
             LastestBidderId = lastestBidderId;
             LastestBidPrice = LastestBidPrice;
             StartingPrice = startingPrice;
-            isSold = isSold;
+            EndTime = endTime;
         }
     }
 }

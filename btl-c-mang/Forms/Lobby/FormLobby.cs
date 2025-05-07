@@ -14,7 +14,7 @@ namespace Client.Forms
 {
     public partial class FormLobby : Form
     {
-        private int secondsLeft = 3600; // 1 hour default auction countdown
+        private int secondsLeft = 0;
         private static FormLobby instance;
         public List<Room> rooms = new List<Room>();
         private Room currentRoom; // Lưu trữ phòng hiện tại để truy cập nhanh
@@ -106,21 +106,29 @@ namespace Client.Forms
 
         private void auctionTimer_Tick(object sender, EventArgs e)
         {
-            if (secondsLeft > 0)
+            if (currentRoom != null)
             {
-                secondsLeft--;
-                int hours = secondsLeft / 3600;
-                int minutes = (secondsLeft % 3600) / 60;
-                int seconds = secondsLeft % 60;
-                timeRemainingLabel.Text = $"Thời gian còn lại: {hours:00}:{minutes:00}:{seconds:00}";
-            }
-            else
-            {
-                timeRemainingLabel.Text = "Thời gian còn lại: Hết giờ";
-                bidInput.Enabled = false;
-                placeBidButton.Enabled = false;
+                Item currentItem = GetCurrentItem();
+
+                if (currentItem != null && currentItem.EndTime > DateTime.Now)
+                {
+                    TimeSpan remainingTime = currentItem.EndTime - DateTime.Now;
+                    int hours = remainingTime.Hours;
+                    int minutes = remainingTime.Minutes;
+                    int seconds = remainingTime.Seconds;
+
+                    timeRemainingLabel.Text = $"Thời gian còn lại: {hours:00}:{minutes:00}:{seconds:00}";
+                }
+                else
+                {
+                    // Auction has ended
+                    timeRemainingLabel.Text = "Thời gian còn lại: Hết giờ";
+                    bidInput.Enabled = false;
+                    placeBidButton.Enabled = false;
+                }
             }
         }
+
 
         private async Task LoadAndRenderUserPicture(string imageUrl)
         {
@@ -183,7 +191,6 @@ namespace Client.Forms
                     this.Invoke(new Action(() => SwitchToAuctionInterface(room)));
                     return;
                 }
-                Console.WriteLine($"rightPanel Visible: {rightPanel.Visible}, Size: {rightPanel.Size}");
 
                 currentRoom = room; // Lưu phòng hiện tại
                 roomsPanel.Visible = false;
@@ -192,7 +199,7 @@ namespace Client.Forms
                 roomNameLabel.Text = $"Phòng đấu giá: {room.Name} (ID: {room.Id})";
 
 
-                Item currentItem = room.Items?.FirstOrDefault(item => !item.isSold);
+                Item currentItem = GetCurrentItem();
                 if (currentItem != null)
                 {
                     itemNameLabel.Text = currentItem.Name ?? "Không xác định";
@@ -388,7 +395,7 @@ namespace Client.Forms
         {
             try
             {
-                return currentRoom?.Items?.FirstOrDefault(item => !item.isSold);
+                return currentRoom?.Items?.FirstOrDefault(item => !item.isSold && item.EndTime > DateTime.Now);
             }
             catch (Exception ex)
             {
@@ -452,8 +459,10 @@ namespace Client.Forms
                     double buyNowPrice = message.ReadDouble();
                     double currentPrice = message.ReadDouble();
                     bool isSold = message.ReadBoolean();
+                    string et = message.ReadUTF();
+                    DateTime endTime = DateTime.Parse(et);
 
-                    items.Add(new Item(itemId, lastBidderID, itemName, itemDesc, imageUrl, startPrice, buyNowPrice, currentPrice, isSold));
+                    items.Add(new Item(itemId, lastBidderID, itemName, itemDesc, imageUrl, startPrice, buyNowPrice, currentPrice, isSold, endTime));
                 }
                 int chatsNum = message.ReadInt();
                 for (int i = 0; i < chatsNum; i++)
@@ -816,16 +825,6 @@ namespace Client.Forms
         public void ShowSystemMessage(string message)
         {
             AddMessageToChat($"HỆ THỐNG: {message}", Color.Yellow);
-        }
-
-        private void InitializeChat()
-        {
-            chatDisplayBox.Clear();
-            ShowSystemMessage("Chào mừng đến phòng đấu giá!");
-
-            // Example messages to show chat functionality
-            ShowUserJoined("Trần Kim Cương");
-            ShowUserJoined("Nguyễn Văn A");
         }
 
         // Call this when the Leave Room button is clicked
