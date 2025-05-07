@@ -23,7 +23,7 @@ namespace AuctionServer
                 Console.WriteLine($"Error connecting to database: {ex.Message}");
                 return;
             }
-            TcpListener listener = new TcpListener(IPAddress.Any, 8000);
+            TcpListener listener = new TcpListener(IPAddress.Any, 8080);
             listener.Start();
             Console.WriteLine($"Server started on {listener.LocalEndpoint}...");
 

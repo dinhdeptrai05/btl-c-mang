@@ -15,7 +15,7 @@ namespace Client
 
             try
             {
-                var client = AuctionClient.gI("18.167.221.122", 8000);
+                var client = AuctionClient.gI("157.66.218.146", 8080);
 
                 Console.WriteLine("Kết nối thành công với server.");
 
