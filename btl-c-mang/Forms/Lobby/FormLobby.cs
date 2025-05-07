@@ -35,12 +35,19 @@ namespace Client.Forms
             AuctionClient.gI().RegisterHandler(CommandType.getAllRoomResponse, HandleLoadRoomsResponse);
             AuctionClient.gI().RegisterHandler(CommandType.JoinRoomResponse, HandleJoinRoomResponse);
 
+            // Đăng ký handler nhận tin nhắn chat
+            AuctionClient.gI().RegisterHandler(CommandType.ChatMessageReceived, HandleChatMessageReceived);
+
             // Tải danh sách phòng khi form được khởi tạo
             LoadRooms();
 
             // Gán sự kiện cho các nút
             placeBidButton.Click += (sender, e) => PlaceBid(GetCurrentItem());
             leaveRoomButton.Click += (sender, e) => LeaveRoom();
+
+            // Gán sự kiện cho nút gửi tin nhắn chat và ô nhập chat
+            sendMessageButton.Click += sendMessageButton_Click;
+            chatInputBox.KeyPress += chatInputBox_KeyPress;
         }
 
         private void StartTimers()
@@ -220,6 +227,108 @@ namespace Client.Forms
             }
         }
 
+        public void HandleChatMessageReceived(Message message)
+        {
+            sbyte cmd = message.ReadSByte();
+            switch ((int)cmd)
+            {
+                case 0:
+                    {
+                        try
+                        {
+                            int roomId = message.ReadInt();
+                            string time = message.ReadUTF();
+                            string name = message.ReadUTF();
+                            string chatMessage = message.ReadUTF();
+
+                            // Only process if this is for the current room
+                            if (currentRoom != null && currentRoom.Id == roomId)
+                            {
+                                // Format: [Time] Name: Message
+                                string formattedMessage = $"[{time}] {name}: {chatMessage}";
+
+                                // Determine message color based on sender
+                                Color messageColor;
+                                if (name == AuctionClient.gI().Name)
+                                {
+                                    messageColor = Color.LightBlue; // Current user's messages
+                                }
+                                else if (name.ToLower().Contains("hệ thống") || name.ToLower().Contains("system"))
+                                {
+                                    messageColor = Color.Yellow; // System messages
+                                }
+                                else
+                                {
+                                    messageColor = Color.White; // Other users' messages
+                                }
+
+                                // Add message to chat display
+                                AddMessageToChat(formattedMessage, messageColor);
+
+                                // Also add to the room's chat history
+                                currentRoom.Chats.Add(new Chat(time, name, chatMessage));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Lỗi khi xử lý tin nhắn chat: {ex}");
+                        }
+                    }
+                    break;
+                case 1:
+                    {
+                        try
+                        {
+                            int roomId = message.ReadInt();
+                            string time = message.ReadUTF();
+                            string name = message.ReadUTF();
+
+                            // Only process if this is for the current room
+                            if (currentRoom != null && currentRoom.Id == roomId)
+                            {
+                                // Format: [Time] Name: Message
+                                string formattedMessage = $"[HỆ THỐNG: {name} đã tham gia phòng!";
+
+                                Color messageColor;
+                                messageColor = Color.Yellow; // System messages
+                                AddMessageToChat(formattedMessage, messageColor);
+                                currentRoom.Chats.Add(new Chat(time, name, formattedMessage));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Lỗi khi xử lý tin nhắn chat: {ex}");
+                        }
+                    }
+                    break;
+                case -1:
+                    {
+                        try
+                        {
+                            int roomId = message.ReadInt();
+                            string time = message.ReadUTF();
+                            string name = message.ReadUTF();
+
+                            // Only process if this is for the current room
+                            if (currentRoom != null && currentRoom.Id == roomId)
+                            {
+                                // Format: [Time] Name: Message
+                                string formattedMessage = $"HỆ THỐNG: {name} đã rời phòng!";
+
+                                Color messageColor;
+                                messageColor = Color.Red; // System messages
+                                AddMessageToChat(formattedMessage, messageColor);
+                                currentRoom.Chats.Add(new Chat(time, name, formattedMessage));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Lỗi khi xử lý tin nhắn chat: {ex}");
+                        }
+                    }
+                    break;
+            }
+        }
 
         private void LeaveRoom()
         {
@@ -331,6 +440,7 @@ namespace Client.Forms
                 //secondsLeft = message.ReadInt(); // Giả sử server gửi thời gian còn lại (thêm vào giao thức nếu cần)
 
                 List<Item> items = new List<Item>();
+                List<Chat> chats = new List<Chat>();
                 for (int i = 0; i < itemsNum; i++)
                 {
                     int itemId = message.ReadInt();
@@ -345,14 +455,93 @@ namespace Client.Forms
 
                     items.Add(new Item(itemId, lastBidderID, itemName, itemDesc, imageUrl, startPrice, buyNowPrice, currentPrice, isSold));
                 }
+                int chatsNum = message.ReadInt();
+                for (int i = 0; i < chatsNum; i++)
+                {
+                    string time = message.ReadUTF();
+                    string name = message.ReadUTF();
+                    string msg = message.ReadUTF();
 
-                Room joinedRoom = new Room(roomId, roomName, ownerId, isOpen, items);
-                SwitchToAuctionInterface(joinedRoom);
+                    chats.Add(new Chat(time, name, msg));
+                }
+
+                Room joinedRoom = new Room(roomId, roomName, ownerId, isOpen, items, chats);
+
+                // Use Invoke to ensure UI operations run on the UI thread
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() =>
+                    {
+                        SwitchToAuctionInterface(joinedRoom);
+                        // Clear chat display before loading chat history
+                        chatDisplayBox.Clear();
+                        LoadChatHistory(chats);
+                        ShowSystemMessage("Bạn đã tham gia phòng đấu giá!");
+                    }));
+                }
+                else
+                {
+                    SwitchToAuctionInterface(joinedRoom);
+                    // Clear chat display before loading chat history
+                    chatDisplayBox.Clear();
+                    LoadChatHistory(chats);
+                    ShowSystemMessage("Bạn đã tham gia phòng đấu giá!");
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Lỗi khi xử lý phản hồi tham gia phòng: {ex}");
                 MessageBox.Show($"Lỗi khi tham gia phòng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void LoadChatHistory(List<Chat> chats)
+        {
+            try
+            {
+                if (chatDisplayBox.InvokeRequired)
+                {
+                    chatDisplayBox.Invoke(new Action<List<Chat>>(LoadChatHistory), chats);
+                    return;
+                }
+
+                // First display a system message
+                ShowSystemMessage("Lịch sử chat của phòng:");
+
+                // Then display each chat message from the history
+                foreach (Chat chat in chats)
+                {
+                    // Format: [Time] Name: Message
+                    string formattedMessage = $"[{chat.time}] {chat.name}: {chat.message}";
+
+                    // Add the message with appropriate color (you can customize this)
+                    chatDisplayBox.SelectionStart = chatDisplayBox.TextLength;
+                    chatDisplayBox.SelectionLength = 0;
+
+                    // Use different colors for different users if desired
+                    if (chat.name == AuctionClient.gI().Name)
+                    {
+                        chatDisplayBox.SelectionColor = Color.LightBlue; // Current user's messages
+                    }
+                    else if (chat.name.ToLower().Contains("hệ thống") || chat.name.ToLower().Contains("system"))
+                    {
+                        chatDisplayBox.SelectionColor = Color.Yellow; // System messages
+                    }
+                    else
+                    {
+                        chatDisplayBox.SelectionColor = Color.White; // Other users' messages
+                    }
+
+                    chatDisplayBox.AppendText(formattedMessage + Environment.NewLine);
+                }
+
+                // Scroll to the bottom to show the most recent messages
+                chatDisplayBox.ScrollToCaret();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi tải lịch sử chat: {ex}");
+                ShowSystemMessage($"Không thể tải lịch sử chat: {ex.Message}");
             }
         }
 
@@ -564,14 +753,32 @@ namespace Client.Forms
 
         private void SendChatMessage()
         {
-            if (!string.IsNullOrWhiteSpace(chatInputBox.Text))
+            try
             {
-                string message = chatInputBox.Text.Trim();
-                AddMessageToChat($"{userNameLabel.Text}: {message}", Color.White);
-                chatInputBox.Clear();
+                if (!string.IsNullOrWhiteSpace(chatInputBox.Text) && currentRoom != null)
+                {
+                    string message = chatInputBox.Text.Trim();
 
-                // Here you would typically send the message to the server
-                // using your network communication methods
+                    // Clear the input box first
+                    chatInputBox.Clear();
+
+                    // Send the message to the server
+                    Message msg = new Message(CommandType.SendChatMessage);
+                    msg.WriteInt(currentRoom.Id); // Room ID
+                    msg.WriteUTF((string)DateTime.Now.ToString("HH:mm:ss"));
+                    msg.WriteUTF(AuctionClient.gI().Name);
+                    msg.WriteUTF(message); // Chat message
+                    AuctionClient.SendMessage(msg);
+
+                    // Note: We don't add the message to the chat display here
+                    // because we'll receive it back from the server with
+                    // a proper timestamp, which will trigger the chat update handler
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi gửi tin nhắn: {ex}");
+                ShowSystemMessage($"Không thể gửi tin nhắn: {ex.Message}");
             }
         }
 
@@ -585,8 +792,7 @@ namespace Client.Forms
             }
 
             // Add timestamp to messages
-            string timestamp = DateTime.Now.ToString("HH:mm:ss");
-            string formattedMessage = $"[{timestamp}] {message}";
+            string formattedMessage = $"{message}";
 
             // Add the message to the chat box
             chatDisplayBox.SelectionStart = chatDisplayBox.TextLength;

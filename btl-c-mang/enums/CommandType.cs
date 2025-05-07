@@ -15,11 +15,16 @@ namespace Client.enums
 
         public const sbyte LeaveRoom = 6;
 
+        public const sbyte SendChatMessage = 7;
+
         // Từ Server đến Client
         public const sbyte LoginResponse = -1;
         public const sbyte RegisterResponse = -2;
         public const sbyte getAllRoomResponse = -3;
         public const sbyte JoinRoomResponse = -4;
+        public const sbyte ChatMessageReceived = -5;
+        public const sbyte UserJoinRoom = -6;
+        public const sbyte UserLeaveRoom = -7;
 
     }
 }

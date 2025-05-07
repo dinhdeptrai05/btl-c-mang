@@ -34,6 +34,21 @@ namespace Client.Core
                         FormLobby.gI().HandleJoinRoomResponse(msg);
                         break;
                     }
+                case CommandType.ChatMessageReceived:
+                    {
+                        FormLobby.gI().HandleChatMessageReceived(msg);
+                        break;
+                    }
+                case CommandType.UserJoinRoom:
+                    {
+                        FormLobby.gI().HandleChatMessageReceived(msg);
+                        break;
+                    }
+                case CommandType.UserLeaveRoom:
+                    {
+                        FormLobby.gI().HandleChatMessageReceived(msg);
+                        break;
+                    }
                 default:
                     Console.WriteLine("Not found handler for command ID: " + command);
                     break;

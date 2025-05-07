@@ -70,6 +70,7 @@
     <Compile Include="Forms\Register\FormRegister.Designer.cs">
       <DependentUpon>FormRegister.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\Chat.cs" />
     <Compile Include="Model\Item.cs" />
     <Compile Include="Model\Room.cs" />
     <Compile Include="Program.cs" />

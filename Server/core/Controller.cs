@@ -29,6 +29,12 @@ namespace AuctionServer
                     case CommandType.JoinRoom:
                         HandleJoinRoom(message, session);
                         break;
+                    case CommandType.SendChatMessage:
+                        HandleSendChatMessage(message);
+                        break;
+                    case CommandType.LeaveRoom:
+                        HandleLeaveRoom(message, session);
+                        break;
                     default:
                         Console.WriteLine($"Nhận được command không xác định: {commandId}");
                         break;
@@ -40,6 +46,39 @@ namespace AuctionServer
             }
         }
 
+        private static void HandleSendChatMessage(Message message)
+        {
+            int roomId = message.ReadInt();
+            string time = message.ReadUTF();
+            string name = message.ReadUTF();
+            string msg = message.ReadUTF();
+
+            try
+            {
+                string selectQUERY = "SELECT chat from rooms where id = @param0";
+                DataTable result = database.ExecuteQuery(selectQUERY, roomId);
+                if (result.Rows.Count > 0)
+                {
+                    DataRow row = result.Rows[0];
+                    string chatJson = row["chat"].ToString();
+                    var chats = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Chat>>(chatJson);
+                    chats.Add(new Chat(time, name, msg));
+                    string newChat = Newtonsoft.Json.JsonConvert.SerializeObject(chats);
+                    string updateQUERY = "UPDATE rooms SET chat = @param0 where id = @param1";
+                    database.ExecuteNonQuery(updateQUERY, newChat, roomId);
+                    var response = new Message(CommandType.ChatMessageReceived);
+                    response.WriteSByte(0); // 0 là message thường
+                    response.WriteInt(roomId);
+                    response.WriteUTF(time);
+                    response.WriteUTF(name);
+                    response.WriteUTF(msg);
+                    ClientSession.SendToAll(response);
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+        }
         private static void HandleJoinRoom(Message message, ClientSession session)
         {
             int roomId = message.ReadInt();
@@ -57,21 +96,11 @@ namespace AuctionServer
                     int ownerId = Convert.ToInt32(row["owner_id"]);
                     bool isOpen = Convert.ToBoolean(row["is_open"]);
                     string itemsJson = row["items"].ToString(); // Lấy danh sách items dưới dạng JSON
+                    string chatJson = row["chat"].ToString();
 
                     // Phân tích cú pháp JSON để chuyển đổi thành danh sách các đối tượng Item
                     var items = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Item>>(itemsJson);
-                    foreach (var item in items)
-                    {
-                        // Console.WriteLine(item.Id);
-                        // Console.WriteLine(item.Name);
-                        // Console.WriteLine(item.Description);
-                        // Console.WriteLine(item.ImageUrl);
-                        // Console.WriteLine(item.LatestBidderId);
-                        // Console.WriteLine(item.LatestBidPrice);
-                        // Console.WriteLine(item.StartingPrice);
-                        Console.WriteLine(item.ToString());
-
-                    }
+                    var chats = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Chat>>(chatJson);
 
                     // Tạo response để gửi về client
                     var response = new Message(CommandType.JoinRoomResponse);
@@ -95,9 +124,25 @@ namespace AuctionServer
                         response.WriteDouble(item.LatestBidPrice);
                         response.WriteBoolean(item.IsSold);
                     }
+                    response.WriteInt(chats.Count);
+                    foreach (var chat in chats)
+                    {
+                        response.WriteUTF(chat.time);
+                        response.WriteUTF(chat.name);
+                        response.WriteUTF(chat.message);
+                    }
+
+                    // Gửi thông báo người dùng tham gia phòng
+                    Message joinNotification = new Message(CommandType.UserJoinRoom);
+                    joinNotification.WriteSByte(1); // 1 là subcommand join room
+                    joinNotification.WriteInt(roomId);
+                    joinNotification.WriteUTF((string)DateTime.Now.ToString("HH:mm:ss"));
+                    joinNotification.WriteUTF(session.GetCurrentUser().Name);
+                    ClientSession.SendToAll(joinNotification);
 
                     // Gửi response về client
                     session.SendMessage(response);
+
                 }
                 else
                 {
@@ -117,6 +162,20 @@ namespace AuctionServer
                 response.WriteUTF($"Lỗi khi tham gia phòng đấu giá: {ex.Message}");
                 session.SendMessage(response);
             }
+        }
+
+        private static void HandleLeaveRoom(Message message, ClientSession session)
+        {
+            int roomId = message.ReadInt();
+            Console.WriteLine($"Nhận được yêu cầu thoát phòng đấu giá với ID: {roomId}");
+
+            // Gửi thông báo người dùng thoát phòng
+            Message leaveNotification = new Message(CommandType.UserLeaveRoom);
+            leaveNotification.WriteSByte(-1); // -1 là sub command thoát phòng
+            leaveNotification.WriteInt(roomId);
+            leaveNotification.WriteUTF((string)DateTime.Now.ToString("HH:mm:ss"));
+            leaveNotification.WriteUTF(session.GetCurrentUser().Name);
+            ClientSession.SendToAll(leaveNotification);
         }
 
         private static void HandleGetAllRoom(Message message, ClientSession session)
@@ -256,6 +315,9 @@ namespace AuctionServer
                         avatar_url = "https://www.w3schools.com/howto/img_avatar.png";
                     }
                     success = true;
+                    User user = new User(userId, username, password, name, avatar_url);
+                    user.Session = session;
+                    ClientSession.users.Add(user);
                 }
                 else
                 {

@@ -11,9 +11,13 @@ namespace AuctionServer
         private TcpClient _client;
         private NetworkStream _stream;
 
+        private static List<ClientSession> sessions = new List<ClientSession>();
+        public static List<User> users = new List<User>();
+
         public ClientSession(TcpClient client)
         {
             _client = client;
+            sessions.Add(this);
             _stream = client.GetStream();
         }
 
@@ -75,6 +79,19 @@ namespace AuctionServer
             {
                 Console.WriteLine("Lỗi gửi message: " + ex.Message);
             }
+        }
+
+        public static void SendToAll(Message message)
+        {
+            foreach (var session in sessions)
+            {
+                session.SendMessage(message);
+            }
+        }
+
+        public User GetCurrentUser()
+        {
+            return users.FirstOrDefault(u => u.Session == this);
         }
     }
 }
