@@ -57,10 +57,14 @@
             this.timeRemainingLabel = new System.Windows.Forms.Label();
             this.bidInput = new System.Windows.Forms.NumericUpDown();
             this.placeBidButton = new System.Windows.Forms.Button();
-            this.soldItemsPanel = new System.Windows.Forms.Panel();
-            this.soldItemsTitleLabel = new System.Windows.Forms.Label();
+            this.chatPanel = new System.Windows.Forms.Panel();
             this.roomInfoPanel = new System.Windows.Forms.Panel();
             this.roomNameLabel = new System.Windows.Forms.Label();
+            this.chatHeaderLabel = new System.Windows.Forms.Label();
+            this.chatContainerPanel = new System.Windows.Forms.Panel();
+            this.chatDisplayBox = new System.Windows.Forms.RichTextBox();
+            this.chatInputBox = new System.Windows.Forms.TextBox();
+            this.sendMessageButton = new System.Windows.Forms.Button();
             this.leaveRoomButton = new System.Windows.Forms.Button();
             this.sidePanel.SuspendLayout();
             this.headerPanel.SuspendLayout();
@@ -72,7 +76,7 @@
             this.rightPanel.SuspendLayout();
             this.auctionInfoPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bidInput)).BeginInit();
-            this.soldItemsPanel.SuspendLayout();
+            this.chatPanel.SuspendLayout();
             this.roomInfoPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -294,7 +298,6 @@
             this.auctionMainPanel.Name = "auctionMainPanel";
             this.auctionMainPanel.Size = new System.Drawing.Size(1045, 628);
             this.auctionMainPanel.TabIndex = 7;
-            this.auctionMainPanel.Visible = false;
             // 
             // leftPanel
             // 
@@ -346,12 +349,14 @@
             // 
             this.rightPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(50)))));
             this.rightPanel.Controls.Add(this.auctionInfoPanel);
-            this.rightPanel.Controls.Add(this.soldItemsPanel);
-            this.rightPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rightPanel.Controls.Add(this.chatPanel);
+            this.rightPanel.Dock = System.Windows.Forms.DockStyle.Right;
             this.rightPanel.Location = new System.Drawing.Point(400, 60);
             this.rightPanel.Name = "rightPanel";
             this.rightPanel.Size = new System.Drawing.Size(645, 568);
-            this.rightPanel.TabIndex = 2;
+            this.rightPanel.TabIndex = 1;
+
+
             // 
             // auctionInfoPanel
             // 
@@ -361,6 +366,7 @@
             this.auctionInfoPanel.Controls.Add(this.timeRemainingLabel);
             this.auctionInfoPanel.Controls.Add(this.bidInput);
             this.auctionInfoPanel.Controls.Add(this.placeBidButton);
+            this.auctionInfoPanel.Controls.Add(this.chatPanel);
             this.auctionInfoPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.auctionInfoPanel.Location = new System.Drawing.Point(0, 0);
             this.auctionInfoPanel.Name = "auctionInfoPanel";
@@ -427,6 +433,85 @@
             this.placeBidButton.TabIndex = 4;
             this.placeBidButton.Text = "Đặt giá";
             this.placeBidButton.UseVisualStyleBackColor = false;
+
+            // 
+            // chatPanel
+            // 
+            this.chatPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(60)))));
+            this.chatPanel.Controls.Add(this.chatContainerPanel);
+            this.chatPanel.Controls.Add(this.chatHeaderLabel);
+            this.chatPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chatPanel.Location = new System.Drawing.Point(0, 220);
+            this.chatPanel.Name = "chatPanel";
+            this.chatPanel.Padding = new System.Windows.Forms.Padding(20);
+            this.chatPanel.Size = new System.Drawing.Size(645, 348);
+            this.chatPanel.TabIndex = 1;
+            // 
+            // chatHeaderLabel
+            // 
+            this.chatHeaderLabel.AutoSize = true;
+            this.chatHeaderLabel.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.chatHeaderLabel.ForeColor = System.Drawing.Color.White;
+            this.chatHeaderLabel.Location = new System.Drawing.Point(20, 20);
+            this.chatHeaderLabel.Name = "chatHeaderLabel";
+            this.chatHeaderLabel.Size = new System.Drawing.Size(141, 21);
+            this.chatHeaderLabel.TabIndex = 0;
+            this.chatHeaderLabel.Text = "Thông báo phòng";
+            // 
+            // chatContainerPanel
+            // 
+            this.chatContainerPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(50)))));
+            this.chatContainerPanel.Controls.Add(this.chatDisplayBox);
+            this.chatContainerPanel.Controls.Add(this.chatInputBox);
+            this.chatContainerPanel.Controls.Add(this.sendMessageButton);
+            this.chatContainerPanel.Location = new System.Drawing.Point(20, 50);
+            this.chatContainerPanel.Name = "chatContainerPanel";
+            this.chatContainerPanel.Padding = new System.Windows.Forms.Padding(10);
+            this.chatContainerPanel.Size = new System.Drawing.Size(605, 278);
+            this.chatContainerPanel.TabIndex = 1;
+            // 
+            // chatDisplayBox
+            // 
+            this.chatDisplayBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(25)))), ((int)(((byte)(25)))), ((int)(((byte)(40)))));
+            this.chatDisplayBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.chatDisplayBox.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.chatDisplayBox.ForeColor = System.Drawing.Color.White;
+            this.chatDisplayBox.Location = new System.Drawing.Point(10, 10);
+            this.chatDisplayBox.Name = "chatDisplayBox";
+            this.chatDisplayBox.ReadOnly = true;
+            this.chatDisplayBox.Size = new System.Drawing.Size(585, 218);
+            this.chatDisplayBox.TabIndex = 0;
+            this.chatDisplayBox.Text = "";
+            // 
+            // chatInputBox
+            // 
+            this.chatInputBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(70)))));
+            this.chatInputBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.chatInputBox.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.chatInputBox.ForeColor = System.Drawing.Color.White;
+            this.chatInputBox.Location = new System.Drawing.Point(10, 238);
+            this.chatInputBox.Name = "chatInputBox";
+            this.chatInputBox.Size = new System.Drawing.Size(495, 25);
+            this.chatInputBox.TabIndex = 1;
+            this.chatInputBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.chatInputBox_KeyPress);
+            // 
+            // sendMessageButton
+            // 
+            this.sendMessageButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(130)))), ((int)(((byte)(180)))));
+            this.sendMessageButton.FlatAppearance.BorderSize = 0;
+            this.sendMessageButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.sendMessageButton.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.sendMessageButton.ForeColor = System.Drawing.Color.White;
+            this.sendMessageButton.Location = new System.Drawing.Point(515, 238);
+            this.sendMessageButton.Name = "sendMessageButton";
+            this.sendMessageButton.Size = new System.Drawing.Size(80, 25);
+            this.sendMessageButton.TabIndex = 2;
+            this.sendMessageButton.Text = "Gửi";
+            this.sendMessageButton.UseVisualStyleBackColor = false;
+            this.sendMessageButton.Click += new System.EventHandler(this.sendMessageButton_Click);
+
+
+
             // 
             // roomInfoPanel
             // 
@@ -494,8 +579,8 @@
             this.auctionInfoPanel.ResumeLayout(false);
             this.auctionInfoPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bidInput)).EndInit();
-            this.soldItemsPanel.ResumeLayout(false);
-            this.soldItemsPanel.PerformLayout();
+            this.chatPanel.ResumeLayout(false);
+            this.chatPanel.PerformLayout();
             this.roomInfoPanel.ResumeLayout(false);
             this.roomInfoPanel.PerformLayout();
             this.ResumeLayout(false);
@@ -532,11 +617,15 @@
         private System.Windows.Forms.Label timeRemainingLabel;
         private System.Windows.Forms.NumericUpDown bidInput;
         private System.Windows.Forms.Button placeBidButton;
-        private System.Windows.Forms.Panel soldItemsPanel;
-        private System.Windows.Forms.Label soldItemsTitleLabel;
+        private System.Windows.Forms.Panel chatPanel;
         private System.Windows.Forms.Panel roomInfoPanel;
         private System.Windows.Forms.Label roomNameLabel;
         private System.Windows.Forms.Button leaveRoomButton;
+        private System.Windows.Forms.RichTextBox chatDisplayBox;
+        private System.Windows.Forms.TextBox chatInputBox;
+        private System.Windows.Forms.Button sendMessageButton;
+        private System.Windows.Forms.Panel chatContainerPanel;
+        private System.Windows.Forms.Label chatHeaderLabel;
         public string userPictureUrl = "https://www.w3schools.com/howto/img_avatar.png";
     }
 }

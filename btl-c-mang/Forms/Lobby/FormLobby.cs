@@ -176,12 +176,14 @@ namespace Client.Forms
                     this.Invoke(new Action(() => SwitchToAuctionInterface(room)));
                     return;
                 }
+                Console.WriteLine($"rightPanel Visible: {rightPanel.Visible}, Size: {rightPanel.Size}");
 
                 currentRoom = room; // Lưu phòng hiện tại
                 roomsPanel.Visible = false;
                 auctionMainPanel.Visible = true;
 
                 roomNameLabel.Text = $"Phòng đấu giá: {room.Name} (ID: {room.Id})";
+
 
                 Item currentItem = room.Items?.FirstOrDefault(item => !item.isSold);
                 if (currentItem != null)
@@ -543,5 +545,93 @@ namespace Client.Forms
         {
             // Xử lý sự kiện mở settings
         }
+
+
+        // Add these methods to the FormLobby class to handle chat functionality
+        private void sendMessageButton_Click(object sender, EventArgs e)
+        {
+            SendChatMessage();
+        }
+
+        private void chatInputBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Enter)
+            {
+                e.Handled = true;
+                SendChatMessage();
+            }
+        }
+
+        private void SendChatMessage()
+        {
+            if (!string.IsNullOrWhiteSpace(chatInputBox.Text))
+            {
+                string message = chatInputBox.Text.Trim();
+                AddMessageToChat($"{userNameLabel.Text}: {message}", Color.White);
+                chatInputBox.Clear();
+
+                // Here you would typically send the message to the server
+                // using your network communication methods
+            }
+        }
+
+        public void AddMessageToChat(string message, Color color)
+        {
+            // Invoke required if called from non-UI thread
+            if (chatDisplayBox.InvokeRequired)
+            {
+                chatDisplayBox.Invoke(new Action<string, Color>(AddMessageToChat), message, color);
+                return;
+            }
+
+            // Add timestamp to messages
+            string timestamp = DateTime.Now.ToString("HH:mm:ss");
+            string formattedMessage = $"[{timestamp}] {message}";
+
+            // Add the message to the chat box
+            chatDisplayBox.SelectionStart = chatDisplayBox.TextLength;
+            chatDisplayBox.SelectionLength = 0;
+            chatDisplayBox.SelectionColor = color;
+            chatDisplayBox.AppendText(formattedMessage + Environment.NewLine);
+            chatDisplayBox.ScrollToCaret();
+        }
+
+        // Example methods to show system messages when users join or leave
+        public void ShowUserJoined(string username)
+        {
+            AddMessageToChat($"Người dùng {username} đã tham gia phòng", Color.LightGreen);
+        }
+
+        public void ShowUserLeft(string username)
+        {
+            AddMessageToChat($"Người dùng {username} đã rời phòng", Color.LightSalmon);
+        }
+
+        public void ShowSystemMessage(string message)
+        {
+            AddMessageToChat($"HỆ THỐNG: {message}", Color.Yellow);
+        }
+
+        private void InitializeChat()
+        {
+            chatDisplayBox.Clear();
+            ShowSystemMessage("Chào mừng đến phòng đấu giá!");
+
+            // Example messages to show chat functionality
+            ShowUserJoined("Trần Kim Cương");
+            ShowUserJoined("Nguyễn Văn A");
+        }
+
+        // Call this when the Leave Room button is clicked
+        private void leaveRoomButton_Click(object sender, EventArgs e)
+        {
+            // Notify the server that you're leaving
+            // ...
+
+            // Show rooms panel and hide auction panel
+            auctionMainPanel.Visible = false;
+            roomsPanel.Visible = true;
+        }
+
     }
 }
