@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using Client.Core;
 using Client.enums;
 using Client.Model;
+using Client.Forms.Lobby;
 using Message = Client.Core.Message;
 
 namespace Client.Forms
@@ -34,6 +35,8 @@ namespace Client.Forms
             // Đăng ký handler nhận danh sách phòng và phản hồi tham gia phòng
             AuctionClient.gI().RegisterHandler(CommandType.getAllRoomResponse, HandleLoadRoomsResponse);
             AuctionClient.gI().RegisterHandler(CommandType.JoinRoomResponse, HandleJoinRoomResponse);
+            AuctionClient.gI().RegisterHandler(CommandType.CreateRoomResponse, HandleCreateRoomResponse);
+            AuctionClient.gI().RegisterHandler(CommandType.AuctionStarted, HandleAuctionStarted);
 
             // Đăng ký handler nhận tin nhắn chat
             AuctionClient.gI().RegisterHandler(CommandType.ChatMessageReceived, HandleChatMessageReceived);
@@ -117,7 +120,10 @@ namespace Client.Forms
                     int minutes = remainingTime.Minutes;
                     int seconds = remainingTime.Seconds;
 
+                    secondsLeft = seconds;
+
                     timeRemainingLabel.Text = $"Thời gian còn lại: {hours:00}:{minutes:00}:{seconds:00}";
+
                 }
                 else
                 {
@@ -169,7 +175,14 @@ namespace Client.Forms
 
         private void dashboardButton_Click(object sender, EventArgs e)
         {
-            LoadRooms();
+            using (CreateRoomForm createRoomForm = new CreateRoomForm())
+            {
+                if (createRoomForm.ShowDialog() == DialogResult.OK)
+                {
+                    // Form đã đóng sau khi tạo phòng thành công
+                    LoadRooms(); // Tải lại danh sách phòng
+                }
+            }
         }
 
         private void userNameLabel_Click(object sender, EventArgs e)
@@ -198,7 +211,6 @@ namespace Client.Forms
 
                 roomNameLabel.Text = $"Phòng đấu giá: {room.Name} (ID: {room.Id})";
 
-
                 Item currentItem = GetCurrentItem();
                 if (currentItem != null)
                 {
@@ -211,6 +223,19 @@ namespace Client.Forms
                     bidInput.Value = bidInput.Minimum;
                     bidInput.Enabled = true;
                     placeBidButton.Enabled = true;
+
+                    // Thêm nút mua ngay
+                    Button buyNowButton = new Button
+                    {
+                        Text = $"Mua ngay ({currentItem.BuyNowPrice:N0} VND)",
+                        BackColor = Color.FromArgb(70, 130, 180),
+                        ForeColor = Color.White,
+                        FlatStyle = FlatStyle.Flat,
+                        Location = new Point(placeBidButton.Location.X, placeBidButton.Location.Y + 45),
+                        Size = new Size(120, 35)
+                    };
+                    buyNowButton.Click += (s, e) => BuyNow(currentItem);
+                    auctionInfoPanel.Controls.Add(buyNowButton);
 
                     await LoadAndRenderItemPicture(currentItem.ImageURL ?? "https://via.placeholder.com/360x260");
                 }
@@ -225,12 +250,41 @@ namespace Client.Forms
                     bidInput.Enabled = false;
                     placeBidButton.Enabled = false;
                 }
-
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Lỗi khi chuyển đổi giao diện đấu giá: {ex}");
                 MessageBox.Show($"Lỗi khi chuyển đổi giao diện đấu giá: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BuyNow(Item item)
+        {
+            try
+            {
+                if (item == null)
+                {
+                    MessageBox.Show("Không có vật phẩm nào để mua!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var result = MessageBox.Show(
+                    $"Bạn có chắc chắn muốn mua vật phẩm này với giá {item.BuyNowPrice:N0} VND?",
+                    "Xác nhận mua ngay",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes)
+                {
+                    Message msg = new Message(CommandType.BuyNow);
+                    msg.WriteInt(item.Id);
+                    AuctionClient.SendMessage(msg);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi mua ngay: {ex}");
+                MessageBox.Show($"Lỗi khi mua ngay: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -395,7 +449,11 @@ namespace Client.Forms
         {
             try
             {
-                return currentRoom?.Items?.FirstOrDefault(item => !item.isSold && item.EndTime > DateTime.Now);
+                if (currentRoom?.Items == null) return null;
+
+                return currentRoom.Items.FirstOrDefault(item =>
+                    !item.isSold &&
+                    item.EndTime > DateTime.Now);
             }
             catch (Exception ex)
             {
@@ -836,6 +894,75 @@ namespace Client.Forms
             // Show rooms panel and hide auction panel
             auctionMainPanel.Visible = false;
             roomsPanel.Visible = true;
+        }
+
+        public void HandleCreateRoomResponse(Message message)
+        {
+            try
+            {
+                bool success = message.ReadBoolean();
+                if (!success)
+                {
+                    string errorMessage = message.ReadUTF();
+                    MessageBox.Show(errorMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                int roomId = message.ReadInt();
+                MessageBox.Show($"Tạo phòng thành công! ID phòng: {roomId}", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                LoadRooms(); // Tải lại danh sách phòng
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi xử lý phản hồi tạo phòng: {ex}");
+                MessageBox.Show($"Lỗi khi tạo phòng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        public void HandleAuctionStarted(Message message)
+        {
+            try
+            {
+                int roomId = message.ReadInt();
+                if (currentRoom != null && currentRoom.Id == roomId)
+                {
+                    ShowSystemMessage("Phiên đấu giá đã bắt đầu!");
+                    // Cập nhật UI nếu cần
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi xử lý thông báo bắt đầu đấu giá: {ex}");
+            }
+        }
+
+        public void HandleBuyNowResponse(Message message)
+        {
+            try
+            {
+                bool success = message.ReadBoolean();
+                if (!success)
+                {
+                    string errorMessage = message.ReadUTF();
+                    MessageBox.Show(errorMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                int itemId = message.ReadInt();
+                string buyerName = message.ReadUTF();
+                double price = message.ReadDouble();
+
+                if (currentRoom != null)
+                {
+                    ShowSystemMessage($"Vật phẩm đã được mua bởi {buyerName} với giá {price:N0} VND!");
+                    // Cập nhật UI nếu cần
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi xử lý phản hồi mua ngay: {ex}");
+                MessageBox.Show($"Lỗi khi mua ngay: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
     }

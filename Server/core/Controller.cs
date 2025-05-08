@@ -35,6 +35,18 @@ namespace AuctionServer
                     case CommandType.LeaveRoom:
                         HandleLeaveRoom(message, session);
                         break;
+                    case CommandType.CreateRoom:
+                        HandleCreateRoom(message, session);
+                        break;
+                    // case CommandType.AddItemToRoom:
+                    //     HandleAddItemToRoom(message, session);
+                    //     break;
+                    // case CommandType.StartAuction:
+                    //     HandleStartAuction(message, session);
+                    //     break;
+                    // case CommandType.BuyNow:
+                    //     HandleBuyNow(message, session);
+                    //     break;
                     default:
                         Console.WriteLine($"Nhận được command không xác định: {commandId}");
                         break;
@@ -43,6 +55,40 @@ namespace AuctionServer
             catch (Exception ex)
             {
                 Console.WriteLine($"Lỗi khi xử lý message: {ex.Message}");
+            }
+        }
+
+
+        private static void HandleCreateRoom(Message message, ClientSession session)
+        {
+            string roomName = message.ReadUTF();
+            int minParticipant = message.ReadInt();
+            int ownerId = message.ReadInt();
+            int itemCount = message.ReadInt();
+            List<Item> items = new List<Item>();
+            for (int i = 0; i < itemCount; i++)
+            {
+                int itemId = message.ReadInt();
+                string itemName = message.ReadUTF();
+                string itemDescription = message.ReadUTF();
+                string itemImageUrl = message.ReadUTF();
+                double itemStartingPrice = message.ReadDouble();
+                double itemBuyNowPrice = message.ReadDouble();
+                string itemEndTime = message.ReadUTF();
+                items.Add(new Item(itemId, itemName, itemDescription, itemImageUrl, itemStartingPrice, itemBuyNowPrice, 0, 0, false, DateTime.Parse(itemEndTime)));
+            }
+            try
+            {
+                string query = "INSERT INTO rooms (name, min_participant, owner_id, items) VALUES (@param0, @param1, @param2, @param3)";
+                int result = database.ExecuteNonQuery(query, roomName, minParticipant, ownerId, Newtonsoft.Json.JsonConvert.SerializeObject(items));
+                var response = new Message(CommandType.CreateRoomResponse);
+                response.WriteBoolean(true);
+                response.WriteInt(result);
+                session.SendMessage(response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi tạo phòng đấu giá: {ex.Message}");
             }
         }
 

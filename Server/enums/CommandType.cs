@@ -17,6 +17,14 @@ namespace AuctionServer
 
         public const sbyte SendChatMessage = 7;
 
+        public const sbyte CreateRoom = 8;
+
+        public const sbyte AddItemToRoom = 9;
+
+        public const sbyte StartAuction = 10;
+
+        public const sbyte BuyNow = 11;
+
         // Từ Server đến Client
         public const sbyte LoginResponse = -1;
         public const sbyte RegisterResponse = -2;
@@ -25,6 +33,10 @@ namespace AuctionServer
         public const sbyte ChatMessageReceived = -5;
         public const sbyte UserJoinRoom = -6;
         public const sbyte UserLeaveRoom = -7;
-
+        public const sbyte CreateRoomResponse = -8;
+        public const sbyte AddItemResponse = -9;
+        public const sbyte StartAuctionResponse = -10;
+        public const sbyte AuctionStarted = -11;
+        public const sbyte BuyNowResponse = -12;
     }
 }

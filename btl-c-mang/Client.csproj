@@ -53,6 +53,12 @@
     <Compile Include="Forms\Lobby\FormLobby.Designer.cs">
       <DependentUpon>FormLobby.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\Lobby\CreateRoomForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Lobby\AddItemForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Forms\Login\FormLogin.cs">
       <SubType>Form</SubType>
     </Compile>

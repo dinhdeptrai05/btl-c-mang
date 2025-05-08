@@ -49,6 +49,21 @@ namespace Client.Core
                         FormLobby.gI().HandleChatMessageReceived(msg);
                         break;
                     }
+                case CommandType.CreateRoomResponse:
+                    {
+                        FormLobby.gI().HandleCreateRoomResponse(msg);
+                        break;
+                    }
+                case CommandType.AuctionStarted:
+                    {
+                        FormLobby.gI().HandleAuctionStarted(msg);
+                        break;
+                    }
+                case CommandType.BuyNowResponse:
+                    {
+                        FormLobby.gI().HandleBuyNowResponse(msg);
+                        break;
+                    }
                 default:
                     Console.WriteLine("Not found handler for command ID: " + command);
                     break;
