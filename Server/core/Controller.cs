@@ -88,11 +88,15 @@ namespace AuctionServer
             }
             try
             {
-                string query = "INSERT INTO rooms (name, min_participant, owner_id, items) VALUES (@param0, @param1, @param2, @param3)";
-                int result = database.ExecuteNonQuery(query, roomName, minParticipant, ownerId, Newtonsoft.Json.JsonConvert.SerializeObject(items));
+                string query = "INSERT INTO rooms (name, min_participant, owner_id, items) VALUES (@param0, @param1, @param2, @param3); SELECT LAST_INSERT_ID() as id;";
+                DataTable result = database.ExecuteQuery(query, roomName, minParticipant, ownerId, Newtonsoft.Json.JsonConvert.SerializeObject(items));
+                int roomId = Convert.ToInt32(result.Rows[0]["id"]);
+
+                Room room = new Room(roomId, roomName, ownerId, minParticipant, DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy"), Newtonsoft.Json.JsonConvert.SerializeObject(items), true, "");
+                Room.Rooms.Add(room);
                 var response = new Message(CommandType.CreateRoomResponse);
                 response.WriteBoolean(true);
-                response.WriteInt(result);
+                response.WriteInt(roomId);
                 session.SendMessage(response);
             }
             catch (Exception ex)

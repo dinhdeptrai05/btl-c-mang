@@ -44,7 +44,7 @@ namespace AuctionServer
             MinParticipant = minParticipant;
             TimeCreated = timeCreated;
             Items = JsonConvert.DeserializeObject<List<Item>>(items);
-            Chats = JsonConvert.DeserializeObject<List<Chat>>(chats);
+            Chats = string.IsNullOrEmpty(chats) ? new List<Chat>() : JsonConvert.DeserializeObject<List<Chat>>(chats);
             isOpen = IsOpen;
         }
 

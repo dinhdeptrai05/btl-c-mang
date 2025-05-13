@@ -132,6 +132,8 @@
             this.auctionsButton.Text = "📥 Join Room";
             this.auctionsButton.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.auctionsButton.UseVisualStyleBackColor = false;
+            this.auctionsButton.Click += new System.EventHandler(this.joinRoom_Click);
+
             // 
             // dashboardButton
             // 

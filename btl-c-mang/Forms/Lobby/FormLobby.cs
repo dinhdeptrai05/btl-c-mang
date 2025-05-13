@@ -315,6 +315,7 @@ namespace Client.Forms
                                 Color messageColor;
                                 if (name == AuctionClient.gI().Name)
                                 {
+                                    formattedMessage = $"[{time}] Bạn: {chatMessage}";
                                     messageColor = Color.LightBlue; // Current user's messages
                                 }
                                 else if (name.ToLower().Contains("hệ thống") || name.ToLower().Contains("system"))
@@ -351,7 +352,7 @@ namespace Client.Forms
                             if (currentRoom != null && currentRoom.Id == roomId)
                             {
                                 // Format: [Time] Name: Message
-                                string formattedMessage = $"[HỆ THỐNG: {name} đã tham gia phòng!";
+                                string formattedMessage = $"HỆ THỐNG: {name} đã tham gia phòng!";
 
                                 Color messageColor;
                                 messageColor = Color.Yellow; // System messages
@@ -466,6 +467,103 @@ namespace Client.Forms
                 Console.WriteLine($"Lỗi khi lấy vật phẩm hiện tại: {ex}");
                 return null;
             }
+        }
+
+        private void joinRoom_Click(object sender, EventArgs e)
+        {
+            // Tạo form nhập ID phòng
+            Form joinRoomForm = new Form
+            {
+                Text = "Tham gia phòng",
+                Size = new Size(400, 200),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                BackColor = Color.FromArgb(45, 45, 65)
+            };
+
+            // Label hướng dẫn
+            Label label = new Label
+            {
+                Text = "Nhập ID phòng bạn muốn tham gia:",
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 10),
+                Location = new Point(20, 20),
+                AutoSize = true
+            };
+
+            // Textbox nhập ID
+            TextBox idInput = new TextBox
+            {
+                Location = new Point(20, 50),
+                Size = new Size(340, 30),
+                Font = new Font("Segoe UI", 12),
+                BackColor = Color.FromArgb(55, 55, 75),
+                ForeColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            // Nút tham gia
+            Button joinButton = new Button
+            {
+                Text = "Tham gia",
+                Location = new Point(280, 100),
+                Size = new Size(80, 35),
+                BackColor = Color.FromArgb(80, 120, 190),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+
+            // Nút hủy
+            Button cancelButton = new Button
+            {
+                Text = "Hủy",
+                Location = new Point(190, 100),
+                Size = new Size(80, 35),
+                BackColor = Color.FromArgb(80, 80, 100),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10),
+                Cursor = Cursors.Hand
+            };
+
+            // Xử lý sự kiện click nút tham gia
+            joinButton.Click += (s, ev) =>
+            {
+                if (int.TryParse(idInput.Text, out int roomId))
+                {
+                    // Tìm phòng trong danh sách
+                    Room targetRoom = rooms.FirstOrDefault(r => r.Id == roomId);
+                    if (targetRoom != null)
+                    {
+                        JoinRoom(targetRoom);
+                        joinRoomForm.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Không tìm thấy phòng với ID này!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Vui lòng nhập ID phòng hợp lệ!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            };
+
+            // Xử lý sự kiện click nút hủy
+            cancelButton.Click += (s, ev) => joinRoomForm.Close();
+
+            // Thêm các control vào form
+            joinRoomForm.Controls.Add(label);
+            joinRoomForm.Controls.Add(idInput);
+            joinRoomForm.Controls.Add(joinButton);
+            joinRoomForm.Controls.Add(cancelButton);
+
+            // Hiển thị form
+            joinRoomForm.ShowDialog();
         }
 
         private void JoinRoom(Room room)
@@ -594,6 +692,7 @@ namespace Client.Forms
                     // Use different colors for different users if desired
                     if (chat.name == AuctionClient.gI().Name)
                     {
+                        formattedMessage = $"[{chat.time}] Bạn: {chat.message}";
                         chatDisplayBox.SelectionColor = Color.LightBlue; // Current user's messages
                     }
                     else if (chat.name.ToLower().Contains("hệ thống") || chat.name.ToLower().Contains("system"))
