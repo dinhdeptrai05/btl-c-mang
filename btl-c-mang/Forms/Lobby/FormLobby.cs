@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Client.Core;
 using Client.enums;
-using Client.Model;
 using Client.Forms.Lobby;
+using Client.Model;
 using Message = Client.Core.Message;
 
 namespace Client.Forms
@@ -51,6 +51,9 @@ namespace Client.Forms
             // Gán sự kiện cho nút gửi tin nhắn chat và ô nhập chat
             sendMessageButton.Click += sendMessageButton_Click;
             chatInputBox.KeyPress += chatInputBox_KeyPress;
+
+            // Thêm sự kiện đóng form
+            this.FormClosing += FormLobby_FormClosing;
         }
 
         private void StartTimers()
@@ -379,7 +382,10 @@ namespace Client.Forms
                                 Color messageColor;
                                 messageColor = Color.Red; // System messages
                                 AddMessageToChat(formattedMessage, messageColor);
-                                currentRoom.Chats.Add(new Chat(time, name, formattedMessage));
+                                if (currentRoom != null)
+                                {
+                                    currentRoom.Chats.Add(new Chat(time, name, formattedMessage));
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -652,12 +658,15 @@ namespace Client.Forms
             try
             {
                 roomsPanel.Controls.Clear();
+                roomsPanel.SuspendLayout();
 
-                foreach (Room room in rooms)
-                {
-                    Panel roomPanel = CreateRoomPanel(room);
-                    roomsPanel.Controls.Add(roomPanel);
-                }
+                roomsPanel.AutoScroll = true;
+                roomsPanel.FlowDirection = FlowDirection.LeftToRight;
+                roomsPanel.WrapContents = true;
+
+                // Thêm padding để tạo khoảng cách ở đáy
+                roomsPanel.Padding = new Padding(45, 0, 40, 0); // 50px khoảng cách ở đáy
+
 
                 if (rooms.Count == 0)
                 {
@@ -666,13 +675,39 @@ namespace Client.Forms
                         Text = "Không có phòng nào. Hãy tạo phòng mới!",
                         AutoSize = true,
                         ForeColor = Color.White,
-                        Font = new Font("Segoe UI", 12),
-                        Padding = new Padding(20)
+                        Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                        Padding = new Padding(25)
                     };
                     roomsPanel.Controls.Add(noRoomsLabel);
                 }
+                else
+                {
+                    // Kích thước cố định cho mỗi panel phòng
+                    int roomWidth = 310;
+                    int roomHeight = 210;
 
-                roomsPanel.Refresh();
+                    // Tạo và thêm các panel phòng vào FlowLayoutPanel
+                    for (int i = 0; i < rooms.Count; i++)
+                    {
+                        Room room = rooms[i];
+                        Panel roomPanel = CreateRoomPanel(room);
+
+                        // Thiết lập kích thước và margin
+                        roomPanel.Size = new Size(roomWidth, roomHeight);
+                        roomPanel.Margin = new Padding(15, 20, 15, 20); // Tăng margin giữa các phòng
+
+                        roomsPanel.Controls.Add(roomPanel);
+                    }
+
+                    Panel spacerPanel = new Panel
+                    {
+                        Size = new Size(1, 70),
+                        Margin = new Padding(0)
+                    };
+                    roomsPanel.Controls.Add(spacerPanel);
+                }
+
+                roomsPanel.ResumeLayout();
             }
             catch (Exception ex)
             {
@@ -684,13 +719,13 @@ namespace Client.Forms
         {
             Panel panel = new Panel
             {
-                Width = 220,
-                Height = 170,
-                Margin = new Padding(15),
-                BackColor = Color.FromArgb(45, 45, 65),
+                Width = 320, // Đồng bộ với kích thước trong DisplayRooms
+                Height = 210,
+                BackColor = room.isOpen ? Color.FromArgb(45, 45, 65) : Color.FromArgb(50, 50, 70),
                 BorderStyle = BorderStyle.None
             };
 
+            // Thêm hiệu ứng bo góc và đổ bóng
             panel.Paint += (sender, e) =>
             {
                 using (GraphicsPath path = new GraphicsPath())
@@ -704,86 +739,115 @@ namespace Client.Forms
                     path.CloseFigure();
                     e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
                     panel.Region = new Region(path);
+
+                    using (Pen pen = new Pen(Color.FromArgb(90, 90, 120), 1.5f))
+                    {
+                        e.Graphics.DrawPath(pen, path);
+                    }
                 }
             };
 
+            // Tạo một hiệu ứng nền gradient tùy thuộc vào trạng thái phòng
+            panel.BackColor = room.isOpen
+                ? Color.FromArgb(45, 45, 65)
+                : Color.FromArgb(60, 50, 70);
+
+            // Tiêu đề phòng với font lớn hơn và vị trí cân đối
             Label nameLabel = new Label
             {
                 Text = room.Name,
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
                 ForeColor = Color.White,
                 AutoSize = false,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Width = panel.Width - 20,
-                Height = 30,
-                Location = new Point(10, 15)
+                Width = panel.Width - 40,
+                Height = 35,
+                Location = new Point(20, 15)
             };
 
+            // Trạng thái phòng với viền bo tròn
             Label statusLabel = new Label
             {
                 Text = room.isOpen ? "Đang mở" : "Đã đóng",
-                Font = new Font("Segoe UI", 9),
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
                 ForeColor = room.isOpen ? Color.LightGreen : Color.LightCoral,
+                BackColor = room.isOpen ? Color.FromArgb(30, 80, 30) : Color.FromArgb(80, 30, 30),
                 AutoSize = false,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Width = panel.Width - 20,
-                Height = 20,
-                Location = new Point(10, 45)
+                Width = 100,
+                Height = 25,
+                Location = new Point((panel.Width - 100) / 2, 50)
+            };
+            // Bo tròn cho label trạng thái
+            statusLabel.Paint += (s, e) =>
+            {
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                using (GraphicsPath path = new GraphicsPath())
+                {
+                    path.AddEllipse(0, 0, statusLabel.Width, statusLabel.Height);
+                    statusLabel.Region = new Region(path);
+                }
             };
 
+            // Thông tin ID
             Label idLabel = new Label
             {
                 Text = $"ID: {room.Id}",
-                Font = new Font("Segoe UI", 9),
+                Font = new Font("Segoe UI", 10),
                 ForeColor = Color.LightGray,
                 AutoSize = false,
                 TextAlign = ContentAlignment.MiddleLeft,
-                Width = panel.Width - 20,
-                Height = 20,
-                Location = new Point(10, 70)
+                Width = panel.Width - 40,
+                Height = 22,
+                Location = new Point(20, 85)
             };
 
+            // Thông tin chủ phòng
             Label ownerLabel = new Label
             {
                 Text = $"Chủ phòng: {room.OwnerId}",
-                Font = new Font("Segoe UI", 9),
+                Font = new Font("Segoe UI", 10),
                 ForeColor = Color.LightGray,
                 AutoSize = false,
                 TextAlign = ContentAlignment.MiddleLeft,
-                Width = panel.Width - 20,
-                Height = 20,
-                Location = new Point(10, 90)
+                Width = panel.Width - 40,
+                Height = 22,
+                Location = new Point(20, 110)
             };
 
+            // Thời gian tạo
             if (room.TimeCreated != null)
             {
                 Label timeLabel = new Label
                 {
                     Text = $"Thời gian tạo: {room.TimeCreated}",
-                    Font = new Font("Segoe UI", 8),
+                    Font = new Font("Segoe UI", 9),
                     ForeColor = Color.Silver,
                     AutoSize = false,
                     TextAlign = ContentAlignment.MiddleLeft,
-                    Width = panel.Width - 20,
-                    Height = 20,
-                    Location = new Point(10, 110)
+                    Width = panel.Width - 40,
+                    Height = 22,
+                    Location = new Point(20, 135)
                 };
                 panel.Controls.Add(timeLabel);
             }
 
+            // Nút tham gia hiện đại
             Button joinButton = new Button
             {
                 Text = "Tham gia",
                 FlatStyle = FlatStyle.Flat,
                 ForeColor = Color.White,
-                BackColor = Color.FromArgb(80, 100, 170),
-                Width = panel.Width - 60,
-                Height = 30,
-                Location = new Point(30, 135),
-                Cursor = Cursors.Hand
+                BackColor = Color.FromArgb(80, 120, 190),
+                Width = panel.Width - 80,
+                Height = 35,
+                Location = new Point(40, 160),
+                Cursor = Cursors.Hand,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
             };
 
             joinButton.FlatAppearance.BorderSize = 0;
+            joinButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(100, 140, 220);
             joinButton.Click += (sender, e) => JoinRoom(room);
 
             panel.Controls.Add(nameLabel);
@@ -792,6 +856,20 @@ namespace Client.Forms
             panel.Controls.Add(ownerLabel);
             panel.Controls.Add(joinButton);
 
+            // Thêm hiệu ứng hover
+            panel.Cursor = Cursors.Hand;
+            panel.MouseEnter += (s, e) =>
+            {
+                panel.BackColor = room.isOpen
+                    ? Color.FromArgb(50, 50, 72)
+                    : Color.FromArgb(65, 55, 75);
+            };
+            panel.MouseLeave += (s, e) =>
+            {
+                panel.BackColor = room.isOpen
+                    ? Color.FromArgb(45, 45, 65)
+                    : Color.FromArgb(60, 50, 70);
+            };
             panel.Click += (sender, e) => JoinRoom(room);
 
             return panel;
@@ -896,6 +974,20 @@ namespace Client.Forms
             roomsPanel.Visible = true;
         }
 
+        private void btnLogout_Click(object sender, EventArgs e)
+        {
+            // Gửi message Logout tới server
+            Message msg = new Message(CommandType.Logout);
+            AuctionClient.SendMessage(msg);
+        }
+
+        private void FormLobby_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // Gửi message Logout tới server trước khi đóng form
+            Message msg = new Message(CommandType.Logout);
+            AuctionClient.SendMessage(msg);
+        }
+
         public void HandleCreateRoomResponse(Message message)
         {
             try
@@ -964,6 +1056,5 @@ namespace Client.Forms
                 MessageBox.Show($"Lỗi khi mua ngay: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
     }
 }

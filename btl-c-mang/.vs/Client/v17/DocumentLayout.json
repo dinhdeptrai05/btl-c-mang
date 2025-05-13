@@ -3,20 +3,28 @@
   "WorkspaceRootPath": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|c:\\users\\windows\\desktop\\bt\\lt_mang\\btl\\btl-c-mang\\forms\\lobby\\formlobby.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:forms\\lobby\\formlobby.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Core\\Controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:Core\\Controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.Designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:Forms\\Lobby\\FormLobby.Designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\forms\\lobby\\formlobby.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:forms\\lobby\\formlobby.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\model\\item.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:model\\item.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\forms\\lobby\\createroomform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:forms\\lobby\\createroomform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\core\\controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:core\\controller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\forms\\lobby\\createroomform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
@@ -31,10 +39,6 @@
       "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:core\\auctionclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\model\\item.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:model\\item.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\forms\\login\\formlogin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:forms\\login\\formlogin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
@@ -47,20 +51,12 @@
       "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:Model\\Room.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.Designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:Forms\\Lobby\\FormLobby.Designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Core\\AuctionItem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:Core\\AuctionItem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Model\\Chat.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:Model\\Chat.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\forms\\lobby\\formlobby.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|solutionrelative:forms\\lobby\\formlobby.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
       "AbsoluteMoniker": "D:0:0:{28416556-ADE5-42D2-BBEA-7473815780A3}|Client.csproj|C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Register\\FormRegister.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -78,7 +74,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 96,
-          "SelectedChildIndex": -1,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -87,20 +83,70 @@
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
-            }
-          ]
-        },
-        {
-          "DockedWidth": 574,
-          "SelectedChildIndex": 7,
-          "Children": [
+            },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "FormLobby.cs",
+              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.cs",
+              "RelativeDocumentMoniker": "Forms\\Lobby\\FormLobby.cs",
+              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.cs",
+              "RelativeToolTip": "Forms\\Lobby\\FormLobby.cs",
+              "ViewState": "AgIAAHABAAAAAAAAAAAswIIBAABiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-02T12:26:33.544Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "FormLogin.cs",
+              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\FormLogin.cs",
+              "RelativeDocumentMoniker": "Forms\\FormLogin.cs",
+              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\FormLogin.cs",
+              "RelativeToolTip": "Forms\\FormLogin.cs",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-23T14:14:52.018Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "FormLobby.Designer.cs",
+              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.Designer.cs",
+              "RelativeDocumentMoniker": "Forms\\Lobby\\FormLobby.Designer.cs",
+              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.Designer.cs",
+              "RelativeToolTip": "Forms\\Lobby\\FormLobby.Designer.cs",
+              "ViewState": "AgIAAM8BAAAAAAAAAAAcwN8BAABSAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-02T12:30:46.602Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Item.cs",
+              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Model\\Item.cs",
+              "RelativeDocumentMoniker": "Model\\Item.cs",
+              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Model\\Item.cs",
+              "RelativeToolTip": "Model\\Item.cs",
+              "ViewState": "AgIAACAAAAAAAAAAAAAuwC4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-02T14:08:00.577Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 4,
+              "Title": "CreateRoomForm.cs",
+              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\CreateRoomForm.cs",
+              "RelativeDocumentMoniker": "Forms\\Lobby\\CreateRoomForm.cs",
+              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\CreateRoomForm.cs",
+              "RelativeToolTip": "Forms\\Lobby\\CreateRoomForm.cs",
+              "ViewState": "AgIAAJ8AAAAAAAAAAAAswK8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-08T03:51:22.362Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
               "Title": "CreateRoomForm.cs [Design]",
               "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\CreateRoomForm.cs",
               "RelativeDocumentMoniker": "Forms\\Lobby\\CreateRoomForm.cs",
@@ -111,39 +157,14 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "FormLobby.Designer.cs",
-              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.Designer.cs",
-              "RelativeDocumentMoniker": "Forms\\Lobby\\FormLobby.Designer.cs",
-              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.Designer.cs",
-              "RelativeToolTip": "Forms\\Lobby\\FormLobby.Designer.cs",
-              "ViewState": "AgIAAA4AAAAAAAAAAAAMwC8AAABFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-02T12:30:46.602Z"
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "Controller.cs",
-              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Core\\Controller.cs",
-              "RelativeDocumentMoniker": "Core\\Controller.cs",
-              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Core\\Controller.cs",
-              "RelativeToolTip": "Core\\Controller.cs",
-              "ViewState": "AgIAACwAAAAAAAAAAAAiwDUAAAA/AAAAAAAAAA==",
+              "Title": "FormLobby.cs [Design]",
+              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.cs",
+              "RelativeDocumentMoniker": "Forms\\Lobby\\FormLobby.cs",
+              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.cs [Design]",
+              "RelativeToolTip": "Forms\\Lobby\\FormLobby.cs [Design]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-30T14:47:15.345Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "Item.cs",
-              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Model\\Item.cs",
-              "RelativeDocumentMoniker": "Model\\Item.cs",
-              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Model\\Item.cs",
-              "RelativeToolTip": "Model\\Item.cs",
-              "ViewState": "AgIAACEAAAAAAAAAAAAAAC4AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-02T14:08:00.577Z"
+              "WhenOpened": "2025-05-05T01:13:58.585Z"
             },
             {
               "$type": "Document",
@@ -159,45 +180,19 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "FormLobby.cs",
-              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.cs",
-              "RelativeDocumentMoniker": "Forms\\Lobby\\FormLobby.cs",
-              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.cs",
-              "RelativeToolTip": "Forms\\Lobby\\FormLobby.cs",
-              "ViewState": "AgIAAHMBAAAAAAAAAAAswH0BAAAgAAAAAAAAAA==",
+              "DocumentIndex": 5,
+              "Title": "Controller.cs",
+              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Core\\Controller.cs",
+              "RelativeDocumentMoniker": "Core\\Controller.cs",
+              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Core\\Controller.cs",
+              "RelativeToolTip": "Core\\Controller.cs",
+              "ViewState": "AgIAACwAAAAAAAAAAAAiwDgAAAAwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-02T12:26:33.544Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-04-30T14:47:15.345Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAUAAAAAAAAAAAAiwBEAAAAvAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-01T08:54:59.595Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "CreateRoomForm.cs",
-              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\CreateRoomForm.cs",
-              "RelativeDocumentMoniker": "Forms\\Lobby\\CreateRoomForm.cs",
-              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\CreateRoomForm.cs",
-              "RelativeToolTip": "Forms\\Lobby\\CreateRoomForm.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAjAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-08T03:51:22.362Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "Room.cs",
               "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Model\\Room.cs",
               "RelativeDocumentMoniker": "Model\\Room.cs",
@@ -209,7 +204,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 8,
               "Title": "AuctionClient.cs",
               "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Core\\AuctionClient.cs",
               "RelativeDocumentMoniker": "Core\\AuctionClient.cs",
@@ -221,7 +216,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 7,
               "Title": "CommandType.cs",
               "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\enums\\CommandType.cs",
               "RelativeDocumentMoniker": "enums\\CommandType.cs",
@@ -245,18 +240,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
-              "Title": "FormLobby.cs [Design]",
-              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.cs",
-              "RelativeDocumentMoniker": "Forms\\Lobby\\FormLobby.cs",
-              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\FormLobby.cs [Design]",
-              "RelativeToolTip": "Forms\\Lobby\\FormLobby.cs [Design]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-05T01:13:58.585Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "FormLogin.cs [Design]",
               "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Login\\FormLogin.cs",
               "RelativeDocumentMoniker": "Forms\\Login\\FormLogin.cs",
@@ -267,7 +251,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 14,
               "Title": "FormRegister.cs",
               "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Register\\FormRegister.cs",
               "RelativeDocumentMoniker": "Forms\\Register\\FormRegister.cs",
@@ -279,7 +263,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 15,
               "Title": "Color.cs",
               "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\enums\\Color.cs",
               "RelativeDocumentMoniker": "enums\\Color.cs",
@@ -288,17 +272,16 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAABWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-04-30T14:17:52.741Z"
-            },
+            }
+          ]
+        },
+        {
+          "DockedWidth": 574,
+          "SelectedChildIndex": -1,
+          "Children": [
             {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "FormLogin.cs",
-              "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\FormLogin.cs",
-              "RelativeDocumentMoniker": "Forms\\FormLogin.cs",
-              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\FormLogin.cs",
-              "RelativeToolTip": "Forms\\FormLogin.cs",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-23T14:14:52.018Z"
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
             }
           ]
         }

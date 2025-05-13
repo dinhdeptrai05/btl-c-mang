@@ -11,7 +11,6 @@ namespace Client.Forms.Lobby
 
         public AddItemForm()
         {
-            // InitializeComponent();
             InitializeCustomComponents();
         }
 
@@ -82,6 +81,7 @@ namespace Client.Forms.Lobby
                 Minimum = 100000,
                 Maximum = 1000000000,
                 Increment = 100000,
+                Value = 100000,
                 BackColor = Color.FromArgb(45, 45, 65),
                 ForeColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle
@@ -102,6 +102,7 @@ namespace Client.Forms.Lobby
                 Minimum = 100000,
                 Maximum = 1000000000,
                 Increment = 100000,
+                Value = 200000,
                 BackColor = Color.FromArgb(45, 45, 65),
                 ForeColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle
@@ -123,7 +124,9 @@ namespace Client.Forms.Lobby
                 CustomFormat = "dd/MM/yyyy HH:mm:ss",
                 ShowUpDown = true,
                 BackColor = Color.FromArgb(45, 45, 65),
-                ForeColor = Color.White
+                ForeColor = Color.White,
+                MinDate = DateTime.Now.AddMinutes(1),
+                Value = DateTime.Now.AddHours(1)
             };
 
             Label imageUrlLabel = new Label
@@ -140,7 +143,8 @@ namespace Client.Forms.Lobby
                 Width = 300,
                 BackColor = Color.FromArgb(45, 45, 65),
                 ForeColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
+                BorderStyle = BorderStyle.FixedSingle,
+                Text = "https://www.w3schools.com/howto/img_avatar.png" // URL mặc định
             };
 
             Button addButton = new Button

@@ -93,5 +93,19 @@ namespace AuctionServer
         {
             return users.FirstOrDefault(u => u.Session == this);
         }
+
+        public void Disconnect()
+        {
+            try
+            {
+                _stream?.Close();
+                _client?.Close();
+                sessions.Remove(this);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error disconnecting client: {ex.Message}");
+            }
+        }
     }
 }

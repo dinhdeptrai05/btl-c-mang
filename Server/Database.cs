@@ -51,7 +51,29 @@ namespace AuctionServer
             {
                 connection.Open();
                 Console.WriteLine("Kết nối tới MySQL thành công!");
+                init();
             }
+        }
+
+        public void init()
+        {
+            string query = "SELECT * FROM rooms";
+            DataTable result = ExecuteQuery(query);
+            foreach (DataRow row in result.Rows)
+            {
+                Room room = new Room(
+                    int.Parse(row["id"].ToString()),
+                    row["name"].ToString(),
+                    int.Parse(row["owner_id"].ToString()),
+                    int.Parse(row["min_participant"].ToString()),
+                    row["time_created"].ToString(),
+                    row["items"].ToString(),
+                    bool.Parse(int.Parse(row["is_open"].ToString()) == 1 ? "true" : "false"),
+                    row["chat"].ToString()
+                );
+                Room.Rooms.Add(room);
+            }
+            Console.WriteLine("Init rooms thành công");
         }
 
         // Thực thi truy vấn không trả về kết quả

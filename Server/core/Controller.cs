@@ -38,6 +38,9 @@ namespace AuctionServer
                     case CommandType.CreateRoom:
                         HandleCreateRoom(message, session);
                         break;
+                    case CommandType.Logout:
+                        HandleLogout(message, session);
+                        break;
                     // case CommandType.AddItemToRoom:
                     //     HandleAddItemToRoom(message, session);
                     //     break;
@@ -59,6 +62,12 @@ namespace AuctionServer
         }
 
 
+        private static void HandleLogout(Message message, ClientSession session)
+        {
+            Console.WriteLine($"Người dùng {session.GetCurrentUser().Username} đã đăng xuất");
+            ClientSession.users.Remove(session.GetCurrentUser());
+            // session.Disconnect();
+        }
         private static void HandleCreateRoom(Message message, ClientSession session)
         {
             string roomName = message.ReadUTF();
@@ -112,6 +121,8 @@ namespace AuctionServer
                     string newChat = Newtonsoft.Json.JsonConvert.SerializeObject(chats);
                     string updateQUERY = "UPDATE rooms SET chat = @param0 where id = @param1";
                     database.ExecuteNonQuery(updateQUERY, newChat, roomId);
+                    Room room = Room.GetRoom(roomId);
+                    room.Chats.Add(new Chat(time, name, msg));
                     var response = new Message(CommandType.ChatMessageReceived);
                     response.WriteSByte(0); // 0 là message thường
                     response.WriteInt(roomId);
@@ -128,37 +139,22 @@ namespace AuctionServer
         private static void HandleJoinRoom(Message message, ClientSession session)
         {
             int roomId = message.ReadInt();
-            Console.WriteLine($"Nhận được yêu cầu tham gia phòng đấu giá với ID: {roomId}");
-
             try
             {
-                string query = "SELECT * FROM rooms WHERE id = @param0";
-                DataTable result = database.ExecuteQuery(query, roomId);
-
-                if (result.Rows.Count > 0)
+                Room room = Room.GetRoom(roomId);
+                if (room != null)
                 {
-                    DataRow row = result.Rows[0];
-                    string roomName = row["name"].ToString();
-                    int ownerId = Convert.ToInt32(row["owner_id"]);
-                    bool isOpen = Convert.ToBoolean(row["is_open"]);
-                    string itemsJson = row["items"].ToString(); // Lấy danh sách items dưới dạng JSON
-                    string chatJson = row["chat"].ToString();
-
-                    // Phân tích cú pháp JSON để chuyển đổi thành danh sách các đối tượng Item
-                    var items = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Item>>(itemsJson);
-                    var chats = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Chat>>(chatJson);
-
-                    // Tạo response để gửi về client
+                    room.Users.Add(session.GetCurrentUser());
                     var response = new Message(CommandType.JoinRoomResponse);
                     response.WriteBoolean(true); // Tham gia phòng thành công
 
                     response.WriteInt(roomId);
-                    response.WriteUTF(roomName);
-                    response.WriteInt(ownerId);
-                    response.WriteBoolean(isOpen);
-                    response.WriteInt(items.Count);
+                    response.WriteUTF(room.Name);
+                    response.WriteInt(room.OwnerId);
+                    response.WriteBoolean(room.isOpen);
+                    response.WriteInt(room.Items.Count);
 
-                    foreach (Item item in items)
+                    foreach (Item item in room.Items)
                     {
                         response.WriteInt(item.Id);
                         response.WriteInt(item.LatestBidderId);
@@ -171,14 +167,13 @@ namespace AuctionServer
                         response.WriteBoolean(item.IsSold);
                         response.WriteUTF(item.EndTime.ToString("HH:mm:ss dd/MM/yyyy"));
                     }
-                    response.WriteInt(chats.Count);
-                    foreach (var chat in chats)
+                    response.WriteInt(room.Chats.Count);
+                    foreach (var chat in room.Chats)
                     {
                         response.WriteUTF(chat.time);
                         response.WriteUTF(chat.name);
                         response.WriteUTF(chat.message);
                     }
-
                     // Gửi thông báo người dùng tham gia phòng
                     Message joinNotification = new Message(CommandType.UserJoinRoom);
                     joinNotification.WriteSByte(1); // 1 là subcommand join room
@@ -214,8 +209,8 @@ namespace AuctionServer
         private static void HandleLeaveRoom(Message message, ClientSession session)
         {
             int roomId = message.ReadInt();
-            Console.WriteLine($"Nhận được yêu cầu thoát phòng đấu giá với ID: {roomId}");
-
+            Room room = Room.Rooms.FirstOrDefault(r => r.Id == roomId);
+            room.Users.Remove(session.GetCurrentUser());
             // Gửi thông báo người dùng thoát phòng
             Message leaveNotification = new Message(CommandType.UserLeaveRoom);
             leaveNotification.WriteSByte(-1); // -1 là sub command thoát phòng
@@ -227,8 +222,6 @@ namespace AuctionServer
 
         private static void HandleGetAllRoom(Message message, ClientSession session)
         {
-            Console.WriteLine("Nhận được yêu cầu lấy tất cả phòng đấu giá.");
-
             try
             {
                 string query = "SELECT * FROM rooms";
