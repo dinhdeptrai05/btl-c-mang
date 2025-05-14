@@ -35,6 +35,18 @@ namespace Server.Core
             _writer.Write(value);
         }
 
+        public void WriteFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("File không tồn tại", filePath);
+            }
+
+            byte[] fileBytes = File.ReadAllBytes(filePath);
+            _writer.Write(fileBytes.Length);
+            _writer.Write(fileBytes);
+        }
+
         public void WriteBytes(byte[] data, int offset, int count)
         {
             _writer.Write(data, offset, count);
@@ -74,7 +86,7 @@ namespace Server.Core
         {
             byte[] utfBytes = Encoding.UTF8.GetBytes(value);
             _writer.Write(utfBytes.Length);
-            _writer.Write(utfBytes);    
+            _writer.Write(utfBytes);
         }
 
         // Read methods
@@ -91,6 +103,12 @@ namespace Server.Core
         public int ReadInt()
         {
             return _reader.ReadInt32();
+        }
+
+        public byte[] ReadFile()
+        {
+            int length = _reader.ReadInt32();
+            return _reader.ReadBytes(length);
         }
 
         public short ReadShort()

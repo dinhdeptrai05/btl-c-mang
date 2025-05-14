@@ -8,6 +8,7 @@ namespace Client
 {
     class Program
     {
+        [STAThread]
         static async Task Main(string[] args)
         {
             Console.WriteLine("Client đấu giá trực tuyến");

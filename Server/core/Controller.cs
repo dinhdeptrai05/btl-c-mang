@@ -3,7 +3,9 @@ using Server.Core;
 using System.Net.Sockets;
 using System.Data;
 using Google.Protobuf.WellKnownTypes;
-
+using System.Net.Http;
+using System.Threading.Tasks;
+using Util;
 namespace AuctionServer
 {
     public class Controller
@@ -41,6 +43,9 @@ namespace AuctionServer
                     case CommandType.Logout:
                         HandleLogout(message, session);
                         break;
+                    case CommandType.UpdateProfile:
+                        HandleUpdateProfile(message, session);
+                        break;
                     // case CommandType.AddItemToRoom:
                     //     HandleAddItemToRoom(message, session);
                     //     break;
@@ -61,7 +66,47 @@ namespace AuctionServer
             }
         }
 
+        private static async void HandleUpdateProfile(Message message, ClientSession session)
+        {
+            string name = message.ReadUTF();
+            string username = message.ReadUTF();
+            string password = message.ReadUTF();
+            byte[] imageBytes = message.ReadFile();
+            string base64Image = Convert.ToBase64String(imageBytes);
 
+            string avatar_url = null;
+            if (!string.IsNullOrEmpty(base64Image))
+            {
+                avatar_url = await Utils.UploadImageToImgBB(base64Image);
+            }
+
+            try
+            {
+                string query = "UPDATE accounts SET name = @param0, avatar_url = @param1 WHERE id = @param2";
+                database.ExecuteNonQuery(query, name, avatar_url ?? session.GetCurrentUser().Avatar, session.GetCurrentUser().Id);
+
+                // Cập nhật thông tin user trong bộ nhớ
+                session.GetCurrentUser().Name = name;
+                if (avatar_url != null)
+                {
+                    session.GetCurrentUser().Avatar = avatar_url;
+                }
+
+                var response = new Message(CommandType.UpdateProfileResponse);
+                response.WriteBoolean(true);
+                response.WriteUTF(name);
+                response.WriteUTF(avatar_url);
+                session.SendMessage(response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi cập nhật profile: {ex.Message}");
+                var response = new Message(CommandType.UpdateProfileResponse);
+                response.WriteBoolean(false);
+                response.WriteUTF("Lỗi khi cập nhật profile");
+                session.SendMessage(response);
+            }
+        }
         private static void HandleLogout(Message message, ClientSession session)
         {
             Console.WriteLine($"Người dùng {session.GetCurrentUser().Username} đã đăng xuất");

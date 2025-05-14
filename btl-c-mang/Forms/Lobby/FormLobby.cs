@@ -139,18 +139,32 @@ namespace Client.Forms
         }
 
 
-        private async Task LoadAndRenderUserPicture(string imageUrl)
+        public async Task LoadAndRenderUserPicture(string imageUrl)
         {
             try
             {
                 Image userImage = await Utils.Utils.LoadUserPicture(imageUrl);
                 if (userImage != null)
                 {
-                    userPictureBox.Image = userImage;
-                    userPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
-                    GraphicsPath gp = new GraphicsPath();
-                    gp.AddEllipse(0, 0, userPictureBox.Width - 1, userPictureBox.Height - 1);
-                    userPictureBox.Region = new Region(gp);
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(new Action(() =>
+                        {
+                            userPictureBox.Image = userImage;
+                            userPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+                            GraphicsPath gp = new GraphicsPath();
+                            gp.AddEllipse(0, 0, userPictureBox.Width - 1, userPictureBox.Height - 1);
+                            userPictureBox.Region = new Region(gp);
+                        }));
+                    }
+                    else
+                    {
+                        userPictureBox.Image = userImage;
+                        userPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+                        GraphicsPath gp = new GraphicsPath();
+                        gp.AddEllipse(0, 0, userPictureBox.Width - 1, userPictureBox.Height - 1);
+                        userPictureBox.Region = new Region(gp);
+                    }
                 }
             }
             catch (Exception ex)
@@ -976,7 +990,44 @@ namespace Client.Forms
 
         private void settingsButton_Click(object sender, EventArgs e)
         {
-            // Xử lý sự kiện mở settings
+            // Prevent opening profile settings if user is in a room
+            if (currentRoom != null)
+            {
+                MessageBox.Show(
+                    "Bạn không thể thay đổi cài đặt khi đang trong phòng đấu giá!",
+                    "Thông báo",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+                return;
+            }
+
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => settingsButton_Click(sender, e)));
+                return;
+            }
+
+            // Hide the room list panel
+            roomsPanel.Visible = false;
+
+            // Show the profile settings form modally
+            using (FormProfile profileForm = new FormProfile())
+            {
+                if (profileForm.ShowDialog(this) == DialogResult.OK)
+                {
+                    // Update user info on the main UI after profile changes
+                    userNameLabel.Text = AuctionClient.gI().Name ?? "Người dùng";
+                    if (!string.IsNullOrEmpty(AuctionClient.gI().avatar_url))
+                    {
+                        userPictureUrl = AuctionClient.gI().avatar_url;
+                        LoadAndRenderUserPicture(userPictureUrl);
+                    }
+                }
+            }
+
+            // Show the room list panel again after closing the profile form
+            roomsPanel.Visible = true;
         }
 
 
@@ -1153,6 +1204,36 @@ namespace Client.Forms
             {
                 Console.WriteLine($"Lỗi khi xử lý phản hồi mua ngay: {ex}");
                 MessageBox.Show($"Lỗi khi mua ngay: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        public void HandleAddItemResponse(Message message)
+        {
+            bool success = message.ReadBoolean();
+            string responseMessage = message.ReadUTF();
+
+            if (success)
+            {
+                MessageBox.Show("Thêm vật phẩm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                MessageBox.Show(responseMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        public void HandleStartAuctionResponse(Message message)
+        {
+            bool success = message.ReadBoolean();
+            string responseMessage = message.ReadUTF();
+
+            if (success)
+            {
+                MessageBox.Show("Bắt đầu đấu giá thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                MessageBox.Show(responseMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

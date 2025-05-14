@@ -111,7 +111,7 @@
             this.settingsButton.Padding = new System.Windows.Forms.Padding(13, 0, 0, 0);
             this.settingsButton.Size = new System.Drawing.Size(267, 49);
             this.settingsButton.TabIndex = 8;
-            this.settingsButton.Text = "⚙️ Profile Settings";
+            this.settingsButton.Text = "⚙️ Cài đặt hồ sơ";
             this.settingsButton.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.settingsButton.UseVisualStyleBackColor = false;
             this.settingsButton.Click += new System.EventHandler(this.settingsButton_Click);
@@ -129,7 +129,7 @@
             this.auctionsButton.Padding = new System.Windows.Forms.Padding(13, 0, 0, 0);
             this.auctionsButton.Size = new System.Drawing.Size(267, 49);
             this.auctionsButton.TabIndex = 4;
-            this.auctionsButton.Text = "📥 Join Room";
+            this.auctionsButton.Text = "📥 Tham gia phòng";
             this.auctionsButton.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.auctionsButton.UseVisualStyleBackColor = false;
             this.auctionsButton.Click += new System.EventHandler(this.joinRoom_Click);
@@ -148,7 +148,7 @@
             this.dashboardButton.Padding = new System.Windows.Forms.Padding(13, 0, 0, 0);
             this.dashboardButton.Size = new System.Drawing.Size(267, 49);
             this.dashboardButton.TabIndex = 3;
-            this.dashboardButton.Text = "➕ Create Room";
+            this.dashboardButton.Text = "➕ Tạo phòng";
             this.dashboardButton.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.dashboardButton.UseVisualStyleBackColor = false;
             this.dashboardButton.Click += new System.EventHandler(this.dashboardButton_Click);
@@ -166,7 +166,7 @@
             this.homeButton.Padding = new System.Windows.Forms.Padding(13, 0, 0, 0);
             this.homeButton.Size = new System.Drawing.Size(267, 49);
             this.homeButton.TabIndex = 2;
-            this.homeButton.Text = "🏠 Home";
+            this.homeButton.Text = "🏠 Trang chủ";
             this.homeButton.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.homeButton.UseVisualStyleBackColor = false;
             // 

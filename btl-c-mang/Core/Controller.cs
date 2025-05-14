@@ -3,6 +3,7 @@ using Client.enums;
 using Client.Forms;
 using Client.Forms.Login;
 using Client.Forms.Register;
+using Client.Forms.Lobby;
 
 namespace Client.Core
 {
@@ -54,6 +55,16 @@ namespace Client.Core
                         FormLobby.gI().HandleCreateRoomResponse(msg);
                         break;
                     }
+                case CommandType.AddItemResponse:
+                    {
+                        FormLobby.gI().HandleAddItemResponse(msg);
+                        break;
+                    }
+                case CommandType.StartAuctionResponse:
+                    {
+                        FormLobby.gI().HandleStartAuctionResponse(msg);
+                        break;
+                    }
                 case CommandType.AuctionStarted:
                     {
                         FormLobby.gI().HandleAuctionStarted(msg);
@@ -62,6 +73,11 @@ namespace Client.Core
                 case CommandType.BuyNowResponse:
                     {
                         FormLobby.gI().HandleBuyNowResponse(msg);
+                        break;
+                    }
+                case CommandType.UpdateProfileResponse:
+                    {
+                        FormProfile.gI().HandleUpdateProfileResponse(msg);
                         break;
                     }
                 default:

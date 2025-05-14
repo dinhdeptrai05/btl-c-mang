@@ -27,6 +27,8 @@ namespace AuctionServer
 
         public const sbyte Logout = 12;
 
+        public const sbyte UpdateProfile = 13;
+
         // Từ Server đến Client
         public const sbyte LoginResponse = -1;
         public const sbyte RegisterResponse = -2;
@@ -41,5 +43,6 @@ namespace AuctionServer
         public const sbyte AuctionStarted = -11;
         public const sbyte BuyNowResponse = -12;
         public const sbyte LogoutResponse = -13;
+        public const sbyte UpdateProfileResponse = -14;
     }
 }
