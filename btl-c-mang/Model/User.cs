@@ -1,4 +1,5 @@
-﻿using Client.Core;
+﻿using System.Collections.Generic;
+using Client.Core;
 
 namespace Client.Model
 {
@@ -10,6 +11,7 @@ namespace Client.Model
         public string Name { get; set; }
         public string Avatar { get; set; }
         public AuctionClient Session { get; set; }
+        public static List<User> Users = new List<User>();
 
         public User(int id, string username, string password, string name, string avatar)
         {
@@ -18,6 +20,11 @@ namespace Client.Model
             Password = password;
             Name = name;
             Avatar = avatar;
+        }
+
+        public static User GetUserById(int id)
+        {
+            return Users.Find(user => user.Id == id);
         }
     }
 }

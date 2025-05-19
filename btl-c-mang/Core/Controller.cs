@@ -80,6 +80,11 @@ namespace Client.Core
                         FormProfile.gI().HandleUpdateProfileResponse(msg);
                         break;
                     }
+                case CommandType.PlaceBidResponse:
+                    {
+                        FormLobby.gI().HandlePlaceBidResponse(msg);
+                        break;
+                    }
                 default:
                     Console.WriteLine("Not found handler for command ID: " + command);
                     break;

@@ -46,6 +46,9 @@ namespace AuctionServer
                     case CommandType.UpdateProfile:
                         HandleUpdateProfile(message, session);
                         break;
+                    case CommandType.PlaceBid:
+                        HandlePlaceBid(message, session);
+                        break;
                     // case CommandType.AddItemToRoom:
                     //     HandleAddItemToRoom(message, session);
                     //     break;
@@ -64,6 +67,39 @@ namespace AuctionServer
             {
                 Console.WriteLine($"Lỗi khi xử lý message: {ex.Message}");
             }
+        }
+
+        private static void HandlePlaceBid(Message message, ClientSession session)
+        {
+            int roomId = message.ReadInt();
+            int itemId = message.ReadInt();
+            double bidPrice = message.ReadDouble();
+            int bidderId = message.ReadInt();
+            Room room = Room.GetRoom(roomId);
+            Item item = room.Items.FirstOrDefault(i => i.Id == itemId);
+            if (item != null)
+            {
+                item.LatestBidderId = bidderId;
+                item.LatestBidPrice = bidPrice;
+                item.EndTime = DateTime.Now.AddMinutes(10);
+            }
+            try
+            {
+                string stmt = "UPDATE rooms SET items = @param0 WHERE id = @param1";
+                string itemsJson = Newtonsoft.Json.JsonConvert.SerializeObject(room.Items);
+                database.ExecuteNonQuery(stmt, itemsJson, roomId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi cập nhật giá: {ex.Message}");
+            }
+            var response = new Message(CommandType.PlaceBidResponse);
+            response.WriteInt(roomId);
+            response.WriteInt(itemId);
+            response.WriteDouble(bidPrice);
+            response.WriteUTF(item.EndTime.ToString("HH:mm:ss dd/MM/yyyy"));
+            response.WriteUTF(session.GetCurrentUser().Name);
+            ClientSession.SendToAll(response);
         }
 
         private static async void HandleUpdateProfile(Message message, ClientSession session)
@@ -129,7 +165,7 @@ namespace AuctionServer
                 double itemStartingPrice = message.ReadDouble();
                 double itemBuyNowPrice = message.ReadDouble();
                 string itemEndTime = message.ReadUTF();
-                items.Add(new Item(itemId, itemName, itemDescription, itemImageUrl, itemStartingPrice, itemBuyNowPrice, 0, 0, false, DateTime.Parse(itemEndTime)));
+                items.Add(new Item(itemId, itemName, itemDescription, itemImageUrl, itemStartingPrice, itemBuyNowPrice, 0, "", 0, false, DateTime.Parse(itemEndTime)));
             }
             try
             {
@@ -207,6 +243,7 @@ namespace AuctionServer
                     {
                         response.WriteInt(item.Id);
                         response.WriteInt(item.LatestBidderId);
+                        response.WriteUTF(item.LatestBidderName);
                         response.WriteUTF(item.Name);
                         response.WriteUTF(item.Description);
                         response.WriteUTF(item.ImageUrl);

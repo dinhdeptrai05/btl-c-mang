@@ -44,5 +44,7 @@ namespace AuctionServer
         public const sbyte BuyNowResponse = -12;
         public const sbyte LogoutResponse = -13;
         public const sbyte UpdateProfileResponse = -14;
+        public const sbyte PlaceBidResponse = -15;
+        public const sbyte BidSuccess = -16;
     }
 }

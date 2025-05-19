@@ -119,18 +119,19 @@ namespace Client.Forms
                 if (currentItem != null && currentItem.EndTime > DateTime.Now)
                 {
                     TimeSpan remainingTime = currentItem.EndTime - DateTime.Now;
-                    int hours = remainingTime.Hours;
-                    int minutes = remainingTime.Minutes;
+                    int minutes = (int)remainingTime.TotalMinutes;
                     int seconds = remainingTime.Seconds;
 
-                    secondsLeft = seconds;
+                    timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
 
-                    timeRemainingLabel.Text = $"Thời gian còn lại: {hours:00}:{minutes:00}:{seconds:00}";
-
+                    // Cập nhật trạng thái nút đặt giá
+                    bool canBid = minutes > 0 && !currentItem.isSold;
+                    bidInput.Enabled = canBid;
+                    placeBidButton.Enabled = canBid;
                 }
-                else
+                else if (currentItem != null)
                 {
-                    // Auction has ended
+                    // Hết thời gian đấu giá
                     timeRemainingLabel.Text = "Thời gian còn lại: Hết giờ";
                     bidInput.Enabled = false;
                     placeBidButton.Enabled = false;
@@ -222,7 +223,7 @@ namespace Client.Forms
                     return;
                 }
 
-                currentRoom = room; // Lưu phòng hiện tại
+                currentRoom = room;
                 roomsPanel.Visible = false;
                 auctionMainPanel.Visible = true;
 
@@ -233,28 +234,48 @@ namespace Client.Forms
                 {
                     itemNameLabel.Text = currentItem.Name ?? "Không xác định";
                     itemDescLabel.Text = currentItem.Description ?? "Không có mô tả";
-                    currentPriceLabel.Text = $"Giá hiện tại: {currentItem.LastestBidPrice:N0} VND";
+                    currentPriceLabel.Text = $"Giá hiện tại: {(currentItem.LastestBidPrice > currentItem.StartingPrice ? currentItem.LastestBidPrice : currentItem.StartingPrice):N0} VNĐ";
                     lastBidderLabel.Text = $"Người đấu giá: {(string.IsNullOrEmpty(currentItem.LastestBidderName) ? "Chưa có" : currentItem.LastestBidderName)}";
-                    timeRemainingLabel.Text = $"Thời gian còn lại: {secondsLeft / 3600:00}:{(secondsLeft % 3600) / 60:00}:{secondsLeft % 60:00}";
-                    bidInput.Minimum = (decimal)(currentItem.LastestBidPrice + 100000);
-                    bidInput.Value = bidInput.Minimum;
+
+                    // Tính thời gian còn lại
+                    TimeSpan remainingTime = currentItem.EndTime - DateTime.Now;
+                    int minutes = (int)remainingTime.TotalMinutes;
+                    int seconds = remainingTime.Seconds;
+                    timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
+
+                    // Thiết lập giá đặt tối thiểu và tối đa
+                    double minBid = currentItem.LastestBidPrice > 0 ? currentItem.LastestBidPrice : currentItem.StartingPrice;
+                    double maxBid = currentItem.BuyNowPrice > 0 ? currentItem.BuyNowPrice : minBid * 10;
+
+                    // Cập nhật NumericUpDown
+                    bidInput.Minimum = (decimal)minBid;
+                    bidInput.Maximum = (decimal)maxBid;
+                    bidInput.Increment = 100000; // Tăng mỗi lần 100k
+
+                    // Đặt giá trị mặc định là giá tối thiểu + 100k, nhưng không vượt quá giá tối đa
+                    decimal defaultBid = Math.Min((decimal)(minBid + 100000), (decimal)maxBid);
+                    bidInput.Value = defaultBid;
+
                     bidInput.Enabled = true;
                     placeBidButton.Enabled = true;
 
-                    // Thêm nút mua ngay
-                    Button buyNowButton = new Button
+                    // Thêm nút mua ngay nếu có giá mua ngay
+                    if (currentItem.BuyNowPrice > 0)
                     {
-                        Text = $"Mua ngay ({currentItem.BuyNowPrice:N0} VND)",
-                        BackColor = Color.FromArgb(70, 130, 180),
-                        ForeColor = Color.White,
-                        FlatStyle = FlatStyle.Flat,
-                        Location = new Point(placeBidButton.Location.X, placeBidButton.Location.Y + 45),
-                        Size = new Size(120, 35)
-                    };
-                    buyNowButton.Click += (s, e) => BuyNow(currentItem);
-                    auctionInfoPanel.Controls.Add(buyNowButton);
+                        Button buyNowButton = new Button
+                        {
+                            Text = $"Mua ngay ({currentItem.BuyNowPrice:N0} VNĐ)",
+                            BackColor = Color.FromArgb(70, 130, 180),
+                            ForeColor = Color.White,
+                            FlatStyle = FlatStyle.Flat,
+                            Location = new Point(placeBidButton.Location.X, placeBidButton.Location.Y + 45),
+                            Size = new Size(120, 35)
+                        };
+                        buyNowButton.Click += (s, e) => BuyNow(currentItem);
+                        auctionInfoPanel.Controls.Add(buyNowButton);
+                    }
 
-                    await LoadAndRenderItemPicture(currentItem.ImageURL ?? "https://via.placeholder.com/360x260");
+                    LoadAndRenderItemPicture(currentItem.ImageURL ?? "https://via.placeholder.com/360x260");
                 }
                 else
                 {
@@ -444,20 +465,41 @@ namespace Client.Forms
                     return;
                 }
 
-                if (bidInput.Value <= (decimal)item.LastestBidPrice)
+                double minBid = item.LastestBidPrice > 0 ? item.LastestBidPrice : item.StartingPrice;
+                if (bidInput.Value <= (decimal)minBid)
                 {
-                    MessageBox.Show($"Giá đấu phải lớn hơn giá hiện tại ({item.LastestBidPrice:N0} VND)!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show($"Giá đấu phải lớn hơn giá hiện tại ({minBid:N0} VNĐ)!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
                 double bidPrice = (double)bidInput.Value;
 
                 Message msg = new Message(CommandType.PlaceBid);
+                msg.WriteInt(currentRoom.Id);
                 msg.WriteInt(item.Id);
                 msg.WriteDouble(bidPrice);
+                msg.WriteInt(AuctionClient.gI().UserId);
                 AuctionClient.SendMessage(msg);
 
-                MessageBox.Show("Đã gửi giá đấu thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // Disable bid controls temporarily to prevent spam
+                bidInput.Enabled = false;
+                placeBidButton.Enabled = false;
+                Task.Delay(1000).ContinueWith(_ =>
+                {
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(new Action(() =>
+                        {
+                            bidInput.Enabled = true;
+                            placeBidButton.Enabled = true;
+                        }));
+                    }
+                    else
+                    {
+                        bidInput.Enabled = true;
+                        placeBidButton.Enabled = true;
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -609,7 +651,14 @@ namespace Client.Forms
                 if (!success)
                 {
                     string errorMessage = message.ReadUTF();
-                    MessageBox.Show(errorMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(new Action(() => MessageBox.Show(errorMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error)));
+                    }
+                    else
+                    {
+                        MessageBox.Show(errorMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                     return;
                 }
 
@@ -619,15 +668,13 @@ namespace Client.Forms
                 bool isOpen = message.ReadBoolean();
                 int itemsNum = message.ReadInt();
 
-                // Đọc thời gian còn lại từ server (nếu có)
-                //secondsLeft = message.ReadInt(); // Giả sử server gửi thời gian còn lại (thêm vào giao thức nếu cần)
-
                 List<Item> items = new List<Item>();
                 List<Chat> chats = new List<Chat>();
                 for (int i = 0; i < itemsNum; i++)
                 {
                     int itemId = message.ReadInt();
                     int lastBidderID = message.ReadInt();
+                    string lastBidderName = message.ReadUTF();
                     string itemName = message.ReadUTF();
                     string itemDesc = message.ReadUTF();
                     string imageUrl = message.ReadUTF();
@@ -638,27 +685,30 @@ namespace Client.Forms
                     string et = message.ReadUTF();
                     DateTime endTime = DateTime.Parse(et);
 
-                    items.Add(new Item(itemId, lastBidderID, itemName, itemDesc, imageUrl, startPrice, buyNowPrice, currentPrice, isSold, endTime));
+                    // Tạo item mới với giá hiện tại (nếu có người đặt giá) hoặc giá khởi điểm
+                    Item item = new Item(itemId, lastBidderID, itemName, itemDesc, imageUrl, startPrice, buyNowPrice,
+                        currentPrice, isSold, endTime);
+                    item.LastestBidderName = lastBidderName; // Cập nhật tên người đặt giá cuối
+                    items.Add(item);
                 }
+
                 int chatsNum = message.ReadInt();
                 for (int i = 0; i < chatsNum; i++)
                 {
                     string time = message.ReadUTF();
                     string name = message.ReadUTF();
                     string msg = message.ReadUTF();
-
                     chats.Add(new Chat(time, name, msg));
                 }
 
                 Room joinedRoom = new Room(roomId, roomName, ownerId, isOpen, items, chats);
 
-                // Use Invoke to ensure UI operations run on the UI thread
+                // Đảm bảo tất cả UI updates được thực hiện trên UI thread
                 if (this.InvokeRequired)
                 {
                     this.Invoke(new Action(() =>
                     {
                         SwitchToAuctionInterface(joinedRoom);
-                        // Clear chat display before loading chat history
                         chatDisplayBox.Clear();
                         LoadChatHistory(chats);
                         ShowSystemMessage("Bạn đã tham gia phòng đấu giá!");
@@ -667,7 +717,6 @@ namespace Client.Forms
                 else
                 {
                     SwitchToAuctionInterface(joinedRoom);
-                    // Clear chat display before loading chat history
                     chatDisplayBox.Clear();
                     LoadChatHistory(chats);
                     ShowSystemMessage("Bạn đã tham gia phòng đấu giá!");
@@ -676,7 +725,14 @@ namespace Client.Forms
             catch (Exception ex)
             {
                 Console.WriteLine($"Lỗi khi xử lý phản hồi tham gia phòng: {ex}");
-                MessageBox.Show($"Lỗi khi tham gia phòng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() => MessageBox.Show($"Lỗi khi tham gia phòng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error)));
+                }
+                else
+                {
+                    MessageBox.Show($"Lỗi khi tham gia phòng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
@@ -1234,6 +1290,71 @@ namespace Client.Forms
             else
             {
                 MessageBox.Show(responseMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        public void HandlePlaceBidResponse(Message message)
+        {
+            try
+            {
+                // Đọc dữ liệu cơ bản
+                int roomId = message.ReadInt();
+                int itemId = message.ReadInt();
+                double bidPrice = message.ReadDouble();
+                string endTimeStr = message.ReadUTF();
+                string bidderName = message.ReadUTF();
+
+                if (currentRoom != null && currentRoom.Id == roomId)
+                {
+                    Item currentItem = currentRoom.Items.FirstOrDefault(i => i.Id == itemId);
+                    if (currentItem != null)
+                    {
+                        // Cập nhật thông tin đấu giá
+                        currentItem.LastestBidPrice = bidPrice;
+                        currentItem.LastestBidderName = bidderName;
+                        try
+                        {
+                            currentItem.EndTime = DateTime.ParseExact(endTimeStr, "HH:mm:ss dd/MM/yyyy", null);
+                        }
+                        catch
+                        {
+                            currentItem.EndTime = DateTime.Now.AddMinutes(10);
+                        }
+
+                        // Cập nhật UI
+                        if (this.InvokeRequired)
+                        {
+                            this.Invoke(new Action(() =>
+                            {
+                                currentPriceLabel.Text = $"Giá hiện tại: {bidPrice:N0} VNĐ";
+                                lastBidderLabel.Text = $"Người đặt giá cuối: {bidderName}";
+                                bidInput.Minimum = (decimal)(bidPrice + 100000);
+                                bidInput.Value = bidInput.Minimum;
+                                int minutes = (int)(currentItem.EndTime - DateTime.Now).TotalMinutes;
+                                int seconds = (int)(currentItem.EndTime - DateTime.Now).TotalSeconds % 60;
+                                timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
+                            }));
+                        }
+                        else
+                        {
+                            currentPriceLabel.Text = $"Giá hiện tại: {bidPrice:N0} VNĐ";
+                            lastBidderLabel.Text = $"Người đặt giá cuối: {bidderName}";
+                            bidInput.Minimum = (decimal)(bidPrice + 100000);
+                            bidInput.Value = bidInput.Minimum;
+                            int minutes = (int)(currentItem.EndTime - DateTime.Now).TotalMinutes;
+                            int seconds = (int)(currentItem.EndTime - DateTime.Now).TotalSeconds % 60;
+                            timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
+                        }
+
+                        // Thông báo trong chat
+                        string formattedMessage = $"[{DateTime.Now:HH:mm:ss}] {bidderName} đã đặt giá {bidPrice:N0} VNĐ";
+                        AddMessageToChat(formattedMessage, Color.Yellow);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in HandlePlaceBidResponse: {ex.Message}");
             }
         }
     }
