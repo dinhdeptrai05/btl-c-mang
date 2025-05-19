@@ -227,6 +227,16 @@ namespace Client.Forms
                 roomsPanel.Visible = false;
                 auctionMainPanel.Visible = true;
 
+                // Xóa nút Mua ngay cũ nếu có
+                foreach (Control control in auctionInfoPanel.Controls.OfType<Button>().ToList())
+                {
+                    if (control.Text.StartsWith("Mua ngay"))
+                    {
+                        auctionInfoPanel.Controls.Remove(control);
+                        control.Dispose();
+                    }
+                }
+
                 roomNameLabel.Text = $"Phòng đấu giá: {room.Name} (ID: {room.Id})";
 
                 Item currentItem = GetCurrentItem();
@@ -259,8 +269,7 @@ namespace Client.Forms
                     bidInput.Enabled = true;
                     placeBidButton.Enabled = true;
 
-                    // Thêm nút mua ngay nếu có giá mua ngay
-                    if (currentItem.BuyNowPrice > 0)
+                    if (currentItem != null && currentItem.BuyNowPrice > 0 && !currentItem.isSold && currentItem.EndTime > DateTime.Now)
                     {
                         Button buyNowButton = new Button
                         {
@@ -446,6 +455,7 @@ namespace Client.Forms
                 auctionMainPanel.Visible = false;
                 roomsPanel.Visible = true;
                 LoadRooms();
+                currentRoom.Items.Clear();
                 currentRoom = null;
             }
             catch (Exception ex)
@@ -665,6 +675,7 @@ namespace Client.Forms
                 int roomId = message.ReadInt();
                 string roomName = message.ReadUTF();
                 int ownerId = message.ReadInt();
+                string ownerName = message.ReadUTF();
                 bool isOpen = message.ReadBoolean();
                 int itemsNum = message.ReadInt();
 
@@ -701,7 +712,7 @@ namespace Client.Forms
                     chats.Add(new Chat(time, name, msg));
                 }
 
-                Room joinedRoom = new Room(roomId, roomName, ownerId, isOpen, items, chats);
+                Room joinedRoom = new Room(roomId, roomName, ownerId, ownerName, isOpen, items, chats);
 
                 // Đảm bảo tất cả UI updates được thực hiện trên UI thread
                 if (this.InvokeRequired)
@@ -799,10 +810,11 @@ namespace Client.Forms
                     int id = message.ReadInt();
                     int owner_id = message.ReadInt();
                     bool isOpen = message.ReadBoolean();
+                    string owner_name = message.ReadUTF();
                     string name = message.ReadUTF();
                     string time_created = message.ReadUTF();
 
-                    Room room = new Room(id, name, owner_id, isOpen);
+                    Room room = new Room(id, name, owner_id, owner_name, isOpen);
                     room.TimeCreated = time_created;
                     rooms.Add(room);
                 }
@@ -974,7 +986,7 @@ namespace Client.Forms
             // Thông tin chủ phòng
             Label ownerLabel = new Label
             {
-                Text = $"Chủ phòng: {room.OwnerId}",
+                Text = $"Chủ phòng: {room.OwnerName}",
                 Font = new Font("Segoe UI", 10),
                 ForeColor = Color.LightGray,
                 AutoSize = false,

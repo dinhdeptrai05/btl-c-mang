@@ -79,8 +79,10 @@ namespace AuctionServer
             Item item = room.Items.FirstOrDefault(i => i.Id == itemId);
             if (item != null)
             {
+                Console.WriteLine($"Đấu giá thành công cho item {itemId} với giá {bidPrice} bởi {bidderId}");
                 item.LatestBidderId = bidderId;
                 item.LatestBidPrice = bidPrice;
+                item.LatestBidderName = session.GetCurrentUser().Name;
                 item.EndTime = DateTime.Now.AddMinutes(10);
             }
             try
@@ -105,21 +107,35 @@ namespace AuctionServer
         private static async void HandleUpdateProfile(Message message, ClientSession session)
         {
             string name = message.ReadUTF();
-            string username = message.ReadUTF();
             string password = message.ReadUTF();
-            byte[] imageBytes = message.ReadFile();
-            string base64Image = Convert.ToBase64String(imageBytes);
+            short haveImage = message.ReadShort();
 
+            string base64Image = null;
             string avatar_url = null;
+
+            if (haveImage == 1)
+            {
+                byte[] imageBytes = message.ReadFile();
+                base64Image = Convert.ToBase64String(imageBytes);
+            }
+
             if (!string.IsNullOrEmpty(base64Image))
             {
                 avatar_url = await Utils.UploadImageToImgBB(base64Image);
             }
+            else
+            {
+                avatar_url = session.GetCurrentUser().Avatar;
+            }
+            if (string.IsNullOrEmpty(password))
+            {
+                password = session.GetCurrentUser().Password;
+            }
 
             try
             {
-                string query = "UPDATE accounts SET name = @param0, avatar_url = @param1 WHERE id = @param2";
-                database.ExecuteNonQuery(query, name, avatar_url ?? session.GetCurrentUser().Avatar, session.GetCurrentUser().Id);
+                string query = "UPDATE accounts SET name = @param0, avatar_url = @param1, password = @param2 WHERE id = @param3";
+                database.ExecuteNonQuery(query, name, avatar_url ?? session.GetCurrentUser().Avatar, password, session.GetCurrentUser().Id);
 
                 // Cập nhật thông tin user trong bộ nhớ
                 session.GetCurrentUser().Name = name;
@@ -173,7 +189,7 @@ namespace AuctionServer
                 DataTable result = database.ExecuteQuery(query, roomName, minParticipant, ownerId, Newtonsoft.Json.JsonConvert.SerializeObject(items));
                 int roomId = Convert.ToInt32(result.Rows[0]["id"]);
 
-                Room room = new Room(roomId, roomName, ownerId, minParticipant, DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy"), Newtonsoft.Json.JsonConvert.SerializeObject(items), true, "");
+                Room room = new Room(roomId, roomName, ownerId, User.GetUserById(ownerId).Name, minParticipant, DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy"), Newtonsoft.Json.JsonConvert.SerializeObject(items), true, "");
                 Room.Rooms.Add(room);
                 var response = new Message(CommandType.CreateRoomResponse);
                 response.WriteBoolean(true);
@@ -221,6 +237,7 @@ namespace AuctionServer
             {
             }
         }
+
         private static void HandleJoinRoom(Message message, ClientSession session)
         {
             int roomId = message.ReadInt();
@@ -236,6 +253,7 @@ namespace AuctionServer
                     response.WriteInt(roomId);
                     response.WriteUTF(room.Name);
                     response.WriteInt(room.OwnerId);
+                    response.WriteUTF(room.OwnerName);
                     response.WriteBoolean(room.isOpen);
                     response.WriteInt(room.Items.Count);
 
@@ -284,7 +302,7 @@ namespace AuctionServer
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Lỗi khi tham gia phòng đấu giá: {ex.Message}");
+                Console.WriteLine($"Lỗi khi tham gia phòng đấu giá: {ex}");
                 var response = new Message(CommandType.JoinRoomResponse);
                 response.WriteBoolean(false); // Tham gia phòng thất bại
                 response.WriteUTF($"Lỗi khi tham gia phòng đấu giá: {ex.Message}");
@@ -323,6 +341,7 @@ namespace AuctionServer
                     response.WriteInt(Convert.ToInt32(row["id"]));
                     response.WriteInt(Convert.ToInt32(row["owner_id"]));
                     response.WriteBoolean(Convert.ToBoolean(row["is_open"]));
+                    response.WriteUTF(User.GetUserById(Convert.ToInt32(row["owner_id"])).Name);
                     response.WriteUTF(row["name"].ToString());
                     response.WriteUTF(row["time_created"].ToString());
                 }

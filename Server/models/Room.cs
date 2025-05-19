@@ -8,6 +8,7 @@ namespace AuctionServer
         public int Id { get; set; }
         public string Name { get; set; }
         public int OwnerId { get; set; }
+        public string OwnerName { get; set; }
         public bool isOpen { get; set; }
         public int MinParticipant { get; set; }
         public string TimeCreated { get; set; }
@@ -36,11 +37,12 @@ namespace AuctionServer
             Chats = chats;
         }
 
-        public Room(int id, string name, int ownerId, int minParticipant, string timeCreated, string items, bool IsOpen, string chats)
+        public Room(int id, string name, int ownerId, string ownerName, int minParticipant, string timeCreated, string items, bool IsOpen, string chats)
         {
             Id = id;
             Name = name;
             OwnerId = ownerId;
+            OwnerName = ownerName;
             MinParticipant = minParticipant;
             TimeCreated = timeCreated;
             Items = JsonConvert.DeserializeObject<List<Item>>(items);

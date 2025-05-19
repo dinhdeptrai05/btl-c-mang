@@ -330,6 +330,8 @@
             // itemNameLabel
             // 
             this.itemNameLabel.AutoSize = true;
+            this.itemNameLabel.AutoEllipsis = true;
+            this.itemNameLabel.MaximumSize = new System.Drawing.Size(360, 0);
             this.itemNameLabel.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.itemNameLabel.ForeColor = System.Drawing.Color.White;
             this.itemNameLabel.Location = new System.Drawing.Point(20, 300);

@@ -13,7 +13,6 @@ namespace Client.Forms.Lobby
     {
         private static FormProfile instance;
         private TextBox nameBox;
-        private TextBox usernameBox;
         private TextBox passwordBox;
         private PictureBox avatarBox;
         private Button saveButton;
@@ -95,39 +94,20 @@ namespace Client.Forms.Lobby
                 Font = new Font("Segoe UI", 10)
             };
 
-            // Username input
-            Label usernameLabel = new Label
-            {
-                Text = "Tên đăng nhập:",
-                ForeColor = Color.White,
-                Location = new Point(50, 320),
-                AutoSize = true,
-                Font = new Font("Segoe UI", 10)
-            };
-
-            usernameBox = new TextBox
-            {
-                Location = new Point(50, 350),
-                Size = new Size(400, 30),
-                BackColor = Color.FromArgb(45, 45, 65),
-                ForeColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                Font = new Font("Segoe UI", 10)
-            };
 
             // Password input
             Label passwordLabel = new Label
             {
                 Text = "Mật khẩu mới:",
                 ForeColor = Color.White,
-                Location = new Point(50, 400),
+                Location = new Point(50, 300),
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10)
             };
 
             passwordBox = new TextBox
             {
-                Location = new Point(50, 430),
+                Location = new Point(50, 330),
                 Size = new Size(400, 30),
                 BackColor = Color.FromArgb(45, 45, 65),
                 ForeColor = Color.White,
@@ -166,8 +146,6 @@ namespace Client.Forms.Lobby
             this.Controls.Add(changeAvatarButton);
             this.Controls.Add(nameLabel);
             this.Controls.Add(nameBox);
-            this.Controls.Add(usernameLabel);
-            this.Controls.Add(usernameBox);
             this.Controls.Add(passwordLabel);
             this.Controls.Add(passwordBox);
             this.Controls.Add(saveButton);
@@ -180,7 +158,6 @@ namespace Client.Forms.Lobby
             {
                 // Load current user data
                 nameBox.Text = AuctionClient.gI().Name;
-                usernameBox.Text = AuctionClient.gI().Username;
                 currentAvatarUrl = AuctionClient.gI().avatar_url;
 
                 if (!string.IsNullOrEmpty(currentAvatarUrl))
@@ -325,23 +302,19 @@ namespace Client.Forms.Lobby
                 // Create update profile message
                 Message msg = new Message(CommandType.UpdateProfile);
                 msg.WriteUTF(nameBox.Text);
-                msg.WriteUTF(usernameBox.Text);
                 msg.WriteUTF(passwordBox.Text);
 
                 // Nếu có ảnh mới được chọn, gửi file ảnh
                 if (!string.IsNullOrEmpty(selectedImagePath))
                 {
+                    msg.WriteShort(1);
                     msg.WriteFile(selectedImagePath);
                 }
                 else
                 {
-                    // Nếu không có ảnh mới, gửi URL ảnh hiện tại
-                    msg.WriteUTF(currentAvatarUrl);
+                    msg.WriteShort(0);
                 }
-
                 AuctionClient.SendMessage(msg);
-
-
             }
             catch (Exception ex)
             {

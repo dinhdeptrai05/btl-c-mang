@@ -12,11 +12,7 @@ namespace Client.Model
         public string ImageURL { get; set; }
         public DateTime EndTime { get; set; }
         public bool isSold { get; set; }
-        public int HighestBidderId { get; set; }
-        public string HighestBidderName { get; set; }
-
         public double LastestBidPrice { get; set; }
-
         public int LastestBidderId { get; set; }
         public string LastestBidderName { get; set; }
 
@@ -31,7 +27,7 @@ namespace Client.Model
         }
 
         public Item(int id, int lastestBidderId, string name, string description, string imgURL, double startingPrice, double buyNowPrice,
-            double LastestBidPrice, bool isSold, DateTime endTime)
+            double lastestBidPrice, bool isSold, DateTime endTime)
         {
             Id = id;
             Name = name;
@@ -40,7 +36,7 @@ namespace Client.Model
             BuyNowPrice = buyNowPrice;
             this.isSold = isSold;
             LastestBidderId = lastestBidderId;
-            LastestBidPrice = LastestBidPrice;
+            LastestBidPrice = lastestBidPrice;
             StartingPrice = startingPrice;
             EndTime = endTime;
         }

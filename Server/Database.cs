@@ -65,6 +65,7 @@ namespace AuctionServer
                     int.Parse(row["id"].ToString()),
                     row["name"].ToString(),
                     int.Parse(row["owner_id"].ToString()),
+                    User.GetUserById(int.Parse(row["owner_id"].ToString())).Name,
                     int.Parse(row["min_participant"].ToString()),
                     row["time_created"].ToString(),
                     row["items"].ToString(),
