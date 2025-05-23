@@ -12,9 +12,9 @@ namespace AuctionServer
         public string LatestBidderName { get; set; }
         public double LatestBidPrice { get; set; }
         public bool IsSold { get; set; }
-        public DateTime EndTime { get; set; }
+        public long TimeLeft { get; set; } // Time left in milliseconds
 
-        public Item(int id, string name, string description, string imageUrl, double startingPrice, double buyNowPrice, int latestBidderId, string latestBidderName, double latestBidPrice, bool isSold, DateTime endTime)
+        public Item(int id, string name, string description, string imageUrl, double startingPrice, double buyNowPrice, int latestBidderId, string latestBidderName, double latestBidPrice, bool isSold, long timeLeft)
         {
             Id = id;
             Name = name;
@@ -26,7 +26,7 @@ namespace AuctionServer
             LatestBidderName = latestBidderName;
             LatestBidPrice = latestBidPrice;
             IsSold = isSold;
-            EndTime = endTime;
+            TimeLeft = timeLeft;
         }
     }
 }

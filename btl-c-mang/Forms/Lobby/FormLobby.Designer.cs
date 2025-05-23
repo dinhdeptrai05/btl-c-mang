@@ -269,7 +269,6 @@
             // auctionTimer
             // 
             this.auctionTimer.Interval = 1000;
-            this.auctionTimer.Tick += new System.EventHandler(this.auctionTimer_Tick);
             // 
             // featuredAuctionPanel
             // 

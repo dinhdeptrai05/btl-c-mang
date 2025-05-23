@@ -2,12 +2,16 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using Client.Model;
+using System.IO;
+using System.Threading;
 
 namespace Client.Forms.Lobby
 {
     public partial class AddItemForm : Form
     {
         private Item newItem;
+        private string selectedImagePath;
+        private PictureBox imagePreviewBox;
 
         public AddItemForm()
         {
@@ -18,7 +22,7 @@ namespace Client.Forms.Lobby
         {
             // Form settings
             this.Text = "Thêm vật phẩm mới";
-            this.Size = new Size(500, 600);
+            this.Size = new Size(500, 700);
             this.StartPosition = FormStartPosition.CenterParent;
             this.BackColor = Color.FromArgb(35, 35, 50);
 
@@ -108,43 +112,34 @@ namespace Client.Forms.Lobby
                 BorderStyle = BorderStyle.FixedSingle
             };
 
-            Label endTimeLabel = new Label
+            // Thêm phần chọn ảnh
+            Label imageLabel = new Label
             {
-                Text = "Thời gian kết thúc:",
+                Text = "Ảnh vật phẩm:",
                 ForeColor = Color.White,
-                Location = new Point(20, 260),
+                Location = new Point(20, 280),
                 AutoSize = true
             };
 
-            DateTimePicker endTimePicker = new DateTimePicker
+            Button selectImageButton = new Button
             {
-                Location = new Point(120, 260),
-                Width = 200,
-                Format = DateTimePickerFormat.Custom,
-                CustomFormat = "dd/MM/yyyy HH:mm:ss",
-                ShowUpDown = true,
-                BackColor = Color.FromArgb(45, 45, 65),
+                Text = "Chọn ảnh",
+                BackColor = Color.FromArgb(70, 130, 180),
                 ForeColor = Color.White,
-                MinDate = DateTime.Now.AddMinutes(1),
-                Value = DateTime.Now.AddHours(1)
+                FlatStyle = FlatStyle.Flat,
+                Location = new Point(120, 280),
+                Width = 100,
+                Height = 35
             };
 
-            Label imageUrlLabel = new Label
+            // PictureBox để preview ảnh
+            imagePreviewBox = new PictureBox
             {
-                Text = "URL ảnh:",
-                ForeColor = Color.White,
-                Location = new Point(20, 300),
-                AutoSize = true
-            };
-
-            TextBox imageUrlBox = new TextBox
-            {
-                Location = new Point(120, 300),
-                Width = 300,
-                BackColor = Color.FromArgb(45, 45, 65),
-                ForeColor = Color.White,
+                Location = new Point(120, 330),
+                Size = new Size(200, 200),
+                SizeMode = PictureBoxSizeMode.Zoom,
                 BorderStyle = BorderStyle.FixedSingle,
-                Text = "https://www.w3schools.com/howto/img_avatar.png" // URL mặc định
+                BackColor = Color.FromArgb(45, 45, 65)
             };
 
             Button addButton = new Button
@@ -153,7 +148,7 @@ namespace Client.Forms.Lobby
                 BackColor = Color.FromArgb(70, 130, 180),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Location = new Point(120, 340),
+                Location = new Point(120, 550),
                 Width = 100,
                 Height = 35
             };
@@ -164,7 +159,7 @@ namespace Client.Forms.Lobby
                 BackColor = Color.FromArgb(180, 50, 50),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Location = new Point(230, 340),
+                Location = new Point(230, 550),
                 Width = 100,
                 Height = 35
             };
@@ -176,8 +171,8 @@ namespace Client.Forms.Lobby
                 descLabel, descBox,
                 startPriceLabel, startPriceBox,
                 buyNowPriceLabel, buyNowPriceBox,
-                endTimeLabel, endTimePicker,
-                imageUrlLabel, imageUrlBox,
+                imageLabel, selectImageButton,
+                imagePreviewBox,
                 addButton, cancelButton
             });
 
@@ -185,6 +180,29 @@ namespace Client.Forms.Lobby
             this.Controls.Add(mainPanel);
 
             // Event handlers
+            selectImageButton.Click += (s, e) =>
+            {
+                try
+                {
+                    // Handle cross-thread operation properly
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(new Action(() => OpenFileDialogThread()));
+                        return;
+                    }
+
+                    // Create and configure the thread for opening the file dialog
+                    Thread openFileThread = new Thread(OpenFileDialogThread);
+                    openFileThread.SetApartmentState(ApartmentState.STA);
+                    openFileThread.Start();
+                    openFileThread.Join(); // Wait for thread to complete
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi khi chọn ảnh: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            };
+
             addButton.Click += (s, e) =>
             {
                 if (string.IsNullOrWhiteSpace(nameBox.Text))
@@ -205,11 +223,25 @@ namespace Client.Forms.Lobby
                     return;
                 }
 
-                if (endTimePicker.Value <= DateTime.Now)
+                if (string.IsNullOrEmpty(selectedImagePath))
                 {
-                    MessageBox.Show("Thời gian kết thúc phải lớn hơn thời gian hiện tại!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Vui lòng chọn ảnh vật phẩm!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
+
+                // Tạo thư mục uploads nếu chưa tồn tại
+                string uploadsDir = Path.Combine(Application.StartupPath, "uploads");
+                if (!Directory.Exists(uploadsDir))
+                {
+                    Directory.CreateDirectory(uploadsDir);
+                }
+
+                // Tạo tên file duy nhất
+                string fileName = $"{Guid.NewGuid()}{Path.GetExtension(selectedImagePath)}";
+                string destinationPath = Path.Combine(uploadsDir, fileName);
+
+                // Copy file ảnh vào thư mục uploads
+                File.Copy(selectedImagePath, destinationPath, true);
 
                 // Tạo vật phẩm mới
                 newItem = new Item(
@@ -217,12 +249,12 @@ namespace Client.Forms.Lobby
                     0, // LastestBidderId
                     nameBox.Text,
                     descBox.Text,
-                    imageUrlBox.Text,
+                    fileName, // Lưu tên file thay vì URL
                     (double)startPriceBox.Value,
                     (double)buyNowPriceBox.Value,
                     (double)startPriceBox.Value, // LastestBidPrice ban đầu bằng giá khởi điểm
                     false, // isSold
-                    endTimePicker.Value
+                    600000
                 );
 
                 this.DialogResult = DialogResult.OK;
@@ -234,6 +266,88 @@ namespace Client.Forms.Lobby
                 this.DialogResult = DialogResult.Cancel;
                 this.Close();
             };
+        }
+
+        private void OpenFileDialogThread()
+        {
+            try
+            {
+                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                {
+                    openFileDialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.gif;*.bmp";
+                    openFileDialog.Title = "Chọn ảnh vật phẩm";
+                    openFileDialog.Multiselect = false;
+
+                    if (openFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        string filePath = openFileDialog.FileName;
+                        selectedImagePath = filePath;
+
+                        // Update UI on the UI thread
+                        this.BeginInvoke(new Action(() =>
+                        {
+                            LoadSelectedImage(filePath);
+                        }));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi chọn ảnh: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void LoadSelectedImage(string filePath)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => LoadSelectedImage(filePath)));
+                return;
+            }
+
+            try
+            {
+                // Safely dispose of old image
+                SafeDisposeImage(imagePreviewBox.Image);
+
+                // Create a new image from file
+                using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                {
+                    var newImage = Image.FromStream(stream);
+                    imagePreviewBox.Image = new Bitmap(newImage);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi tải ảnh: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void SafeDisposeImage(Image image)
+        {
+            if (image != null)
+            {
+                try
+                {
+                    if (imagePreviewBox.InvokeRequired)
+                    {
+                        imagePreviewBox.Invoke(new Action(() =>
+                        {
+                            imagePreviewBox.Image = null;
+                            image.Dispose();
+                        }));
+                    }
+                    else
+                    {
+                        imagePreviewBox.Image = null;
+                        image.Dispose();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi giải phóng ảnh: {ex.Message}");
+                }
+            }
         }
 
         public Item GetItem()

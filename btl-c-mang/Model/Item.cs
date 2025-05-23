@@ -10,24 +10,24 @@ namespace Client.Model
         public double StartingPrice { get; set; }
         public double BuyNowPrice { get; set; }
         public string ImageURL { get; set; }
-        public DateTime EndTime { get; set; }
+        public long TimeLeft { get; set; }
         public bool isSold { get; set; }
         public double LastestBidPrice { get; set; }
         public int LastestBidderId { get; set; }
         public string LastestBidderName { get; set; }
 
-        public Item(int id, string name, string description, double startingPrice, DateTime endTime)
+        public Item(int id, string name, string description, double startingPrice, long timeLeft)
         {
             Id = id;
             Name = name;
             Description = description;
             StartingPrice = startingPrice;
-            EndTime = endTime;
+            TimeLeft = timeLeft;
             isSold = true;
         }
 
         public Item(int id, int lastestBidderId, string name, string description, string imgURL, double startingPrice, double buyNowPrice,
-            double lastestBidPrice, bool isSold, DateTime endTime)
+            double lastestBidPrice, bool isSold, long timeLeft)
         {
             Id = id;
             Name = name;
@@ -38,7 +38,7 @@ namespace Client.Model
             LastestBidderId = lastestBidderId;
             LastestBidPrice = lastestBidPrice;
             StartingPrice = startingPrice;
-            EndTime = endTime;
+            TimeLeft = timeLeft;
         }
     }
 }

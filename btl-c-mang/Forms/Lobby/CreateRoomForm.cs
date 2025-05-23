@@ -5,6 +5,8 @@ using Client.Core;
 using Client.enums;
 using Client.Model;
 using Message = Client.Core.Message;
+using System.IO;
+using System;
 
 namespace Client.Forms.Lobby
 {
@@ -26,7 +28,7 @@ namespace Client.Forms.Lobby
         {
             // Form settings
             this.Text = "Tạo phòng đấu giá mới";
-            this.Size = new Size(1000, 600); // Tăng kích thước form để hiển thị đầy đủ thông tin
+            this.Size = new Size(1000, 600);
             this.StartPosition = FormStartPosition.CenterParent;
             this.BackColor = Color.FromArgb(35, 35, 50);
 
@@ -140,6 +142,7 @@ namespace Client.Forms.Lobby
             };
 
             // Thêm các cột cho ListView với kích thước phù hợp
+            itemsListView.Columns.Add("Ảnh", 100);
             itemsListView.Columns.Add("Tên vật phẩm", 200);
             itemsListView.Columns.Add("Mô tả", 290);
             itemsListView.Columns.Add("Giá khởi điểm", 130);
@@ -206,10 +209,21 @@ namespace Client.Forms.Lobby
                     msg.WriteInt(item.Id);
                     msg.WriteUTF(item.Name);
                     msg.WriteUTF(item.Description);
-                    msg.WriteUTF(item.ImageURL);
+
+                    string imagePath = Path.Combine(Application.StartupPath, "uploads", item.ImageURL);
+                    Console.WriteLine(imagePath);
+                    if (File.Exists(imagePath))
+                    {
+                        msg.WriteFile(imagePath);
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Không tìm thấy file ảnh: {imagePath}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
                     msg.WriteDouble(item.StartingPrice);
                     msg.WriteDouble(item.BuyNowPrice);
-                    msg.WriteUTF(item.EndTime.ToString("HH:mm:ss dd/MM/yyyy"));
+                    msg.WriteLong(item.TimeLeft);
                 }
 
                 AuctionClient.SendMessage(msg);
@@ -224,13 +238,41 @@ namespace Client.Forms.Lobby
             itemsListView.BeginUpdate();
             itemsListView.Items.Clear();
 
+            // Tạo ImageList mới cho mỗi lần refresh
+            ImageList imageList = new ImageList();
+            imageList.ImageSize = new Size(80, 80); // Kích thước thumbnail
+            itemsListView.SmallImageList = imageList;
+
             foreach (Item it in items)
             {
-                ListViewItem lvi = new ListViewItem(it.Name);
+                ListViewItem lvi = new ListViewItem();
+
+                // Thêm ảnh vào cột đầu tiên
+                try
+                {
+                    string imagePath = Path.Combine(Application.StartupPath, "uploads", it.ImageURL);
+                    if (File.Exists(imagePath))
+                    {
+                        using (Image img = Image.FromFile(imagePath))
+                        {
+                            // Tạo bản sao của ảnh với kích thước phù hợp
+                            Bitmap thumbnail = new Bitmap(img, new Size(80, 80));
+                            imageList.Images.Add(thumbnail);
+                            lvi.ImageIndex = imageList.Images.Count - 1;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi tải ảnh: {ex.Message}");
+                }
+
+                // Thêm các thông tin khác
+                lvi.SubItems.Add(it.Name);
                 lvi.SubItems.Add(it.Description);
                 lvi.SubItems.Add(it.StartingPrice.ToString("N0") + " VND");
                 lvi.SubItems.Add(it.BuyNowPrice.ToString("N0") + " VND");
-                lvi.SubItems.Add(it.EndTime.ToString("dd/MM/yyyy HH:mm:ss"));
+                lvi.SubItems.Add(it.TimeLeft.ToString());
                 itemsListView.Items.Add(lvi);
             }
 

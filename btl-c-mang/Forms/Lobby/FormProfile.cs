@@ -328,7 +328,7 @@ namespace Client.Forms.Lobby
             this.Close();
         }
 
-        public void HandleUpdateProfileResponse(Message message)
+        public async void HandleUpdateProfileResponse(Message message)
         {
             if (this.InvokeRequired)
             {
@@ -351,7 +351,7 @@ namespace Client.Forms.Lobby
                         AuctionClient.gI().avatar_url = avatar_url;
                     }
 
-                    FormLobby.gI().LoadAndRenderUserPicture(avatar_url);
+                    await FormLobby.gI().LoadAndRenderUserPicture(avatar_url);
 
                     MessageBox.Show("Cập nhật thông tin thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     this.DialogResult = DialogResult.OK;

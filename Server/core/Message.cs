@@ -29,6 +29,11 @@ namespace Server.Core
             _writer = new BinaryWriter(_stream, Encoding.UTF8);
         }
 
+        public void Reset()
+        {
+            _stream.Position = 0;
+        }
+
         // Write methods
         public void WriteByte(byte value)
         {
@@ -140,10 +145,12 @@ namespace Server.Core
 
         public void Flush()
         {
+            _writer.Flush();
         }
 
         public byte[] GetBytes()
         {
+            Flush();
             return _stream.ToArray();
         }
 

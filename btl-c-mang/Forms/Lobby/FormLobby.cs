@@ -19,6 +19,8 @@ namespace Client.Forms
         private static FormLobby instance;
         public List<Room> rooms = new List<Room>();
         private Room currentRoom; // Lưu trữ phòng hiện tại để truy cập nhanh
+        private DateTime lastUpdateTime;
+        private const int TIMER_INTERVAL = 100; // Update every 100ms for smoother countdown
 
         public static FormLobby gI()
         {
@@ -29,6 +31,7 @@ namespace Client.Forms
         {
             instance = this;
             InitializeComponent();
+            InitializeAuctionTimer();
             StartTimers();
             CustomizeDesign();
 
@@ -54,6 +57,14 @@ namespace Client.Forms
 
             // Thêm sự kiện đóng form
             this.FormClosing += FormLobby_FormClosing;
+        }
+
+        private void InitializeAuctionTimer()
+        {
+            auctionTimer = new System.Windows.Forms.Timer();
+            auctionTimer.Interval = TIMER_INTERVAL;
+            auctionTimer.Tick += AuctionTimer_Tick;
+            lastUpdateTime = DateTime.Now;
         }
 
         private void StartTimers()
@@ -110,40 +121,91 @@ namespace Client.Forms
             dateLabel.Text = now.ToString("dddd, MMMM d, yyyy");
         }
 
-        private void auctionTimer_Tick(object sender, EventArgs e)
+        private void AuctionTimer_Tick(object sender, EventArgs e)
         {
-            if (currentRoom != null)
+            try
             {
-                Item currentItem = GetCurrentItem();
-
-                if (currentItem != null && currentItem.EndTime > DateTime.Now)
+                if (currentRoom == null || currentRoom.Items == null || currentRoom.Items.Count == 0)
                 {
-                    TimeSpan remainingTime = currentItem.EndTime - DateTime.Now;
-                    int minutes = (int)remainingTime.TotalMinutes;
-                    int seconds = remainingTime.Seconds;
-
-                    timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
-
-                    // Cập nhật trạng thái nút đặt giá
-                    bool canBid = minutes > 0 && !currentItem.isSold;
-                    bidInput.Enabled = canBid;
-                    placeBidButton.Enabled = canBid;
+                    auctionTimer.Stop();
+                    return;
                 }
-                else if (currentItem != null)
+
+                Item currentItem = GetCurrentItem();
+                if (currentItem == null || currentItem.isSold)
                 {
-                    // Hết thời gian đấu giá
-                    timeRemainingLabel.Text = "Thời gian còn lại: Hết giờ";
-                    bidInput.Enabled = false;
-                    placeBidButton.Enabled = false;
+                    auctionTimer.Stop();
+                    return;
+                }
+
+                // Calculate elapsed time since last update
+                var now = DateTime.Now;
+                var elapsed = (now - lastUpdateTime).TotalMilliseconds;
+                lastUpdateTime = now;
+
+                // Update time left
+                currentItem.TimeLeft -= (long)elapsed;
+                if (currentItem.TimeLeft <= 0)
+                {
+                    currentItem.TimeLeft = 0;
+                    currentItem.isSold = true;
+                    auctionTimer.Stop();
+
+                    // Update UI to show auction ended
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(new Action(() =>
+                        {
+                            timeRemainingLabel.Text = "Đấu giá đã kết thúc";
+                            bidInput.Enabled = false;
+                            placeBidButton.Enabled = false;
+                        }));
+                    }
+                    else
+                    {
+                        timeRemainingLabel.Text = "Đấu giá đã kết thúc";
+                        bidInput.Enabled = false;
+                        placeBidButton.Enabled = false;
+                    }
+                    return;
+                }
+
+                // Update UI with remaining time
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() =>
+                    {
+                        int minutes = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalMinutes;
+                        int seconds = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalSeconds % 60;
+                        timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
+                    }));
+                }
+                else
+                {
+                    int minutes = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalMinutes;
+                    int seconds = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalSeconds % 60;
+                    timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi trong bộ đếm thời gian: {ex}");
+                auctionTimer.Stop();
+            }
         }
-
 
         public async Task LoadAndRenderUserPicture(string imageUrl)
         {
             try
             {
+                // Clear old image first
+                if (userPictureBox.Image != null)
+                {
+                    var oldImage = userPictureBox.Image;
+                    userPictureBox.Image = null;
+                    oldImage.Dispose();
+                }
+
                 Image userImage = await Utils.Utils.LoadUserPicture(imageUrl);
                 if (userImage != null)
                 {
@@ -179,15 +241,46 @@ namespace Client.Forms
         {
             try
             {
+                // Clear old image first
+                if (itemPictureBox.Image != null)
+                {
+                    var oldImage = itemPictureBox.Image;
+                    itemPictureBox.Image = null;
+                    oldImage.Dispose();
+                }
+
                 Image itemImage = await Utils.Utils.LoadUserPicture(imageUrl);
                 if (itemImage != null)
                 {
-                    itemPictureBox.Image = itemImage;
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(new Action(() =>
+                        {
+                            itemPictureBox.Image = itemImage;
+                            itemPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+                        }));
+                    }
+                    else
+                    {
+                        itemPictureBox.Image = itemImage;
+                        itemPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Lỗi khi tải ảnh vật phẩm: {ex}");
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() =>
+                    {
+                        itemPictureBox.Image = null;
+                    }));
+                }
+                else
+                {
+                    itemPictureBox.Image = null;
+                }
             }
         }
 
@@ -223,6 +316,16 @@ namespace Client.Forms
                     return;
                 }
 
+                // Clear old data first
+                itemPictureBox.Image = null;
+                itemNameLabel.Text = "";
+                itemDescLabel.Text = "";
+                currentPriceLabel.Text = "Giá hiện tại: N/A";
+                lastBidderLabel.Text = "Người đấu giá: N/A";
+                timeRemainingLabel.Text = "Thời gian còn lại: N/A";
+                bidInput.Enabled = false;
+                placeBidButton.Enabled = false;
+
                 currentRoom = room;
                 roomsPanel.Visible = false;
                 auctionMainPanel.Visible = true;
@@ -248,9 +351,8 @@ namespace Client.Forms
                     lastBidderLabel.Text = $"Người đấu giá: {(string.IsNullOrEmpty(currentItem.LastestBidderName) ? "Chưa có" : currentItem.LastestBidderName)}";
 
                     // Tính thời gian còn lại
-                    TimeSpan remainingTime = currentItem.EndTime - DateTime.Now;
-                    int minutes = (int)remainingTime.TotalMinutes;
-                    int seconds = remainingTime.Seconds;
+                    int minutes = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalMinutes;
+                    int seconds = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalSeconds % 60;
                     timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
 
                     // Thiết lập giá đặt tối thiểu và tối đa
@@ -269,7 +371,7 @@ namespace Client.Forms
                     bidInput.Enabled = true;
                     placeBidButton.Enabled = true;
 
-                    if (currentItem != null && currentItem.BuyNowPrice > 0 && !currentItem.isSold && currentItem.EndTime > DateTime.Now)
+                    if (currentItem != null && currentItem.BuyNowPrice > 0 && !currentItem.isSold && currentItem.TimeLeft > 0)
                     {
                         Button buyNowButton = new Button
                         {
@@ -286,17 +388,10 @@ namespace Client.Forms
 
                     LoadAndRenderItemPicture(currentItem.ImageURL ?? "https://via.placeholder.com/360x260");
                 }
-                else
-                {
-                    itemNameLabel.Text = "Không có vật phẩm đang đấu giá";
-                    itemDescLabel.Text = "";
-                    itemPictureBox.Image = null;
-                    currentPriceLabel.Text = "Giá hiện tại: N/A";
-                    lastBidderLabel.Text = "Người đấu giá: N/A";
-                    timeRemainingLabel.Text = "Thời gian còn lại: N/A";
-                    bidInput.Enabled = false;
-                    placeBidButton.Enabled = false;
-                }
+
+                // Start the timer when switching to auction interface
+                lastUpdateTime = DateTime.Now;
+                auctionTimer.Start();
             }
             catch (Exception ex)
             {
@@ -526,7 +621,7 @@ namespace Client.Forms
 
                 return currentRoom.Items.FirstOrDefault(item =>
                     !item.isSold &&
-                    item.EndTime > DateTime.Now);
+                    item.TimeLeft > 0);
             }
             catch (Exception ex)
             {
@@ -693,12 +788,11 @@ namespace Client.Forms
                     double buyNowPrice = message.ReadDouble();
                     double currentPrice = message.ReadDouble();
                     bool isSold = message.ReadBoolean();
-                    string et = message.ReadUTF();
-                    DateTime endTime = DateTime.Parse(et);
+                    long timeLeft = message.ReadLong();
 
                     // Tạo item mới với giá hiện tại (nếu có người đặt giá) hoặc giá khởi điểm
                     Item item = new Item(itemId, lastBidderID, itemName, itemDesc, imageUrl, startPrice, buyNowPrice,
-                        currentPrice, isSold, endTime);
+                        currentPrice, isSold, timeLeft);
                     item.LastestBidderName = lastBidderName; // Cập nhật tên người đặt giá cuối
                     items.Add(item);
                 }
@@ -810,11 +904,12 @@ namespace Client.Forms
                     int id = message.ReadInt();
                     int owner_id = message.ReadInt();
                     bool isOpen = message.ReadBoolean();
+                    bool isStarted = message.ReadBoolean();
                     string owner_name = message.ReadUTF();
                     string name = message.ReadUTF();
                     string time_created = message.ReadUTF();
 
-                    Room room = new Room(id, name, owner_id, owner_name, isOpen);
+                    Room room = new Room(id, name, owner_id, owner_name, isOpen, isStarted);
                     room.TimeCreated = time_created;
                     rooms.Add(room);
                 }
@@ -1204,6 +1299,12 @@ namespace Client.Forms
             // Gửi message Logout tới server trước khi đóng form
             Message msg = new Message(CommandType.Logout);
             AuctionClient.SendMessage(msg);
+
+            if (auctionTimer != null)
+            {
+                auctionTimer.Stop();
+                auctionTimer.Dispose();
+            }
         }
 
         public void HandleCreateRoomResponse(Message message)
@@ -1313,7 +1414,7 @@ namespace Client.Forms
                 int roomId = message.ReadInt();
                 int itemId = message.ReadInt();
                 double bidPrice = message.ReadDouble();
-                string endTimeStr = message.ReadUTF();
+                long timeLeft = message.ReadLong();
                 string bidderName = message.ReadUTF();
 
                 if (currentRoom != null && currentRoom.Id == roomId)
@@ -1326,11 +1427,11 @@ namespace Client.Forms
                         currentItem.LastestBidderName = bidderName;
                         try
                         {
-                            currentItem.EndTime = DateTime.ParseExact(endTimeStr, "HH:mm:ss dd/MM/yyyy", null);
+                            currentItem.TimeLeft = timeLeft;
                         }
                         catch
                         {
-                            currentItem.EndTime = DateTime.Now.AddMinutes(10);
+                            currentItem.TimeLeft = 10 * 60 * 1000;
                         }
 
                         // Cập nhật UI
@@ -1342,8 +1443,8 @@ namespace Client.Forms
                                 lastBidderLabel.Text = $"Người đặt giá cuối: {bidderName}";
                                 bidInput.Minimum = (decimal)(bidPrice + 100000);
                                 bidInput.Value = bidInput.Minimum;
-                                int minutes = (int)(currentItem.EndTime - DateTime.Now).TotalMinutes;
-                                int seconds = (int)(currentItem.EndTime - DateTime.Now).TotalSeconds % 60;
+                                int minutes = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalMinutes;
+                                int seconds = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalSeconds % 60;
                                 timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
                             }));
                         }
@@ -1353,8 +1454,8 @@ namespace Client.Forms
                             lastBidderLabel.Text = $"Người đặt giá cuối: {bidderName}";
                             bidInput.Minimum = (decimal)(bidPrice + 100000);
                             bidInput.Value = bidInput.Minimum;
-                            int minutes = (int)(currentItem.EndTime - DateTime.Now).TotalMinutes;
-                            int seconds = (int)(currentItem.EndTime - DateTime.Now).TotalSeconds % 60;
+                            int minutes = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalMinutes;
+                            int seconds = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalSeconds % 60;
                             timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
                         }
 

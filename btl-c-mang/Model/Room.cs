@@ -12,14 +12,16 @@ namespace Client.Model
         public string TimeCreated { get; set; }
         public List<Item> Items { get; set; }
         public List<Chat> Chats { get; set; }
+        public bool isStarted { get; set; }
 
-        public Room(int id, string name, int ownerId, string ownerName, bool isOpen)
+        public Room(int id, string name, int ownerId, string ownerName, bool isOpen, bool isStarted)
         {
             Id = id;
             Name = name;
             OwnerId = ownerId;
             OwnerName = ownerName;
             this.isOpen = isOpen;
+            this.isStarted = isStarted;
             Items = new List<Item>();
         }
 

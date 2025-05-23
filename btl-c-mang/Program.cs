@@ -6,7 +6,7 @@ using Client.Forms.Login;
 
 namespace Client
 {
-    class Program
+    static class Program
     {
         [STAThread]
         static async Task Main(string[] args)

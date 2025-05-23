@@ -75,15 +75,21 @@ namespace AuctionServer
             int itemId = message.ReadInt();
             double bidPrice = message.ReadDouble();
             int bidderId = message.ReadInt();
+            User bidder = ClientSession.users.FirstOrDefault(u => u.Id == bidderId);
+            if (bidder == null)
+            {
+                Console.WriteLine($"Không tìm thấy người dùng với ID: {bidderId}");
+                return;
+            }
             Room room = Room.GetRoom(roomId);
             Item item = room.Items.FirstOrDefault(i => i.Id == itemId);
             if (item != null)
             {
-                Console.WriteLine($"Đấu giá thành công cho item {itemId} với giá {bidPrice} bởi {bidderId}");
+                Console.WriteLine($"Đấu giá thành công cho item {itemId} với giá {bidPrice} bởi {bidder.Name}");
                 item.LatestBidderId = bidderId;
                 item.LatestBidPrice = bidPrice;
-                item.LatestBidderName = session.GetCurrentUser().Name;
-                item.EndTime = DateTime.Now.AddMinutes(10);
+                item.LatestBidderName = bidder.Name;
+                item.TimeLeft = 600000; // Reset to 10 minutes in milliseconds
             }
             try
             {
@@ -99,7 +105,7 @@ namespace AuctionServer
             response.WriteInt(roomId);
             response.WriteInt(itemId);
             response.WriteDouble(bidPrice);
-            response.WriteUTF(item.EndTime.ToString("HH:mm:ss dd/MM/yyyy"));
+            response.WriteLong(item.TimeLeft);
             response.WriteUTF(session.GetCurrentUser().Name);
             ClientSession.SendToAll(response);
         }
@@ -165,7 +171,7 @@ namespace AuctionServer
             ClientSession.users.Remove(session.GetCurrentUser());
             // session.Disconnect();
         }
-        private static void HandleCreateRoom(Message message, ClientSession session)
+        private static async void HandleCreateRoom(Message message, ClientSession session)
         {
             string roomName = message.ReadUTF();
             int minParticipant = message.ReadInt();
@@ -177,16 +183,18 @@ namespace AuctionServer
                 int itemId = message.ReadInt();
                 string itemName = message.ReadUTF();
                 string itemDescription = message.ReadUTF();
-                string itemImageUrl = message.ReadUTF();
+                byte[] itemImage = message.ReadFile();
+                string base64Image = Convert.ToBase64String(itemImage);
+                string itemImageUrlString = await Utils.UploadImageToImgBB(base64Image);
                 double itemStartingPrice = message.ReadDouble();
                 double itemBuyNowPrice = message.ReadDouble();
-                string itemEndTime = message.ReadUTF();
-                items.Add(new Item(itemId, itemName, itemDescription, itemImageUrl, itemStartingPrice, itemBuyNowPrice, 0, "", 0, false, DateTime.Parse(itemEndTime)));
+                long itemTimeLeft = message.ReadLong();
+                items.Add(new Item(itemId, itemName, itemDescription, itemImageUrlString, itemStartingPrice, itemBuyNowPrice, 0, "", 0, false, itemTimeLeft)); // 10 minutes in milliseconds
             }
             try
             {
-                string query = "INSERT INTO rooms (name, min_participant, owner_id, items) VALUES (@param0, @param1, @param2, @param3); SELECT LAST_INSERT_ID() as id;";
-                DataTable result = database.ExecuteQuery(query, roomName, minParticipant, ownerId, Newtonsoft.Json.JsonConvert.SerializeObject(items));
+                string query = "INSERT INTO rooms (name, min_participant, owner_id, items, is_started) VALUES (@param0, @param1, @param2, @param3, @param4); SELECT LAST_INSERT_ID() as id;";
+                DataTable result = database.ExecuteQuery(query, roomName, minParticipant, ownerId, Newtonsoft.Json.JsonConvert.SerializeObject(items), 0);
                 int roomId = Convert.ToInt32(result.Rows[0]["id"]);
 
                 Room room = new Room(roomId, roomName, ownerId, User.GetUserById(ownerId).Name, minParticipant, DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy"), Newtonsoft.Json.JsonConvert.SerializeObject(items), true, "");
@@ -269,7 +277,7 @@ namespace AuctionServer
                         response.WriteDouble(item.BuyNowPrice);
                         response.WriteDouble(item.LatestBidPrice);
                         response.WriteBoolean(item.IsSold);
-                        response.WriteUTF(item.EndTime.ToString("HH:mm:ss dd/MM/yyyy"));
+                        response.WriteLong(item.TimeLeft);
                     }
                     response.WriteInt(room.Chats.Count);
                     foreach (var chat in room.Chats)
@@ -341,6 +349,7 @@ namespace AuctionServer
                     response.WriteInt(Convert.ToInt32(row["id"]));
                     response.WriteInt(Convert.ToInt32(row["owner_id"]));
                     response.WriteBoolean(Convert.ToBoolean(row["is_open"]));
+                    response.WriteBoolean(Convert.ToBoolean(row["is_started"]));
                     response.WriteUTF(User.GetUserById(Convert.ToInt32(row["owner_id"])).Name);
                     response.WriteUTF(row["name"].ToString());
                     response.WriteUTF(row["time_created"].ToString());
