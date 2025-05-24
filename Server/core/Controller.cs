@@ -49,6 +49,9 @@ namespace AuctionServer
                     case CommandType.PlaceBid:
                         HandlePlaceBid(message, session);
                         break;
+                    case CommandType.BuyNow:
+                        HandleBuyNow(message, session);
+                        break;
                     // case CommandType.AddItemToRoom:
                     //     HandleAddItemToRoom(message, session);
                     //     break;
@@ -67,6 +70,58 @@ namespace AuctionServer
             {
                 Console.WriteLine($"Lỗi khi xử lý message: {ex.Message}");
             }
+        }
+
+        private static void HandleBuyNow(Message message, ClientSession session)
+        {
+            int roomId = message.ReadInt();
+            int itemId = message.ReadInt();
+            double buyNowPrice = message.ReadDouble();
+            int buyerId = message.ReadInt();
+            User buyer = ClientSession.users.FirstOrDefault(u => u.Id == buyerId);
+            if (buyer == null)
+            {
+                Console.WriteLine($"Không tìm thấy người dùng với ID: {buyerId}");
+                return;
+            }
+            Room room = Room.GetRoom(roomId);
+            Item item = room.Items.FirstOrDefault(i => i.Id == itemId);
+            if (item == null)
+            {
+                Console.WriteLine($"Không tìm thấy item với ID: {itemId}");
+                return;
+            }
+            if (item.IsSold)
+            {
+                Console.WriteLine($"Item {itemId} đã được bán");
+                return;
+            }
+            if (item.BuyNowPrice < buyNowPrice)
+            {
+                Console.WriteLine($"Giá đấu giá không hợp lệ cho item {itemId}");
+                return;
+            }
+            item.IsSold = true;
+            item.LatestBidderId = buyerId;
+            item.LatestBidPrice = buyNowPrice;
+            item.LatestBidderName = buyer.Name;
+            try
+            {
+                string stmt = "UPDATE rooms SET items = @param0 WHERE id = @param1";
+                string itemsJson = Newtonsoft.Json.JsonConvert.SerializeObject(room.Items);
+                database.ExecuteNonQuery(stmt, itemsJson, roomId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi cập nhật db: {ex.Message}");
+            }
+            var response = new Message(CommandType.BuyNowResponse);
+            response.WriteBoolean(true);
+            response.WriteInt(roomId);
+            response.WriteInt(itemId);
+            response.WriteDouble(buyNowPrice);
+            response.WriteUTF(buyer.Name);
+            ClientSession.SendToAll(response);
         }
 
         private static void HandlePlaceBid(Message message, ClientSession session)

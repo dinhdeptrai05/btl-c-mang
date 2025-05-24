@@ -1,10 +1,9 @@
+using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
-using Server.Core;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
-using Message = Server.Core.Message;
+using Newtonsoft.Json;
 
 namespace AuctionServer
 {
@@ -144,13 +143,5 @@ namespace AuctionServer
         //     // Xóa phòng khỏi danh sách
         //     Rooms.Remove(this);
         // }
-
-        private void SendToAllUsers(Message message)
-        {
-            foreach (var user in Users)
-            {
-                user.Session?.SendMessage(message);
-            }
-        }
     }
 }

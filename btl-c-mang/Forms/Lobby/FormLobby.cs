@@ -40,6 +40,8 @@ namespace Client.Forms
             AuctionClient.gI().RegisterHandler(CommandType.JoinRoomResponse, HandleJoinRoomResponse);
             AuctionClient.gI().RegisterHandler(CommandType.CreateRoomResponse, HandleCreateRoomResponse);
             AuctionClient.gI().RegisterHandler(CommandType.AuctionStarted, HandleAuctionStarted);
+            AuctionClient.gI().RegisterHandler(CommandType.BuyNowResponse, HandleBuyNowResponse);
+
 
             // Đăng ký handler nhận tin nhắn chat
             AuctionClient.gI().RegisterHandler(CommandType.ChatMessageReceived, HandleChatMessageReceived);
@@ -73,8 +75,50 @@ namespace Client.Forms
             auctionTimer.Start();
         }
 
-        private async void CustomizeDesign()
+
+        // Thêm vào constructor của FormLobby
+        private void InitializeBidInput()
         {
+            // Thiết lập cho NumericUpDown bidInput
+            bidInput.DecimalPlaces = 0;
+            bidInput.ThousandsSeparator = true;
+            bidInput.Increment = 100000; // Tăng 100k mỗi lần
+            bidInput.Minimum = 0;
+
+            // Xử lý khi người dùng thay đổi giá trị
+            bidInput.ValueChanged += BidInput_ValueChanged;
+            bidInput.KeyPress += BidInput_KeyPress;
+        }
+
+        private void BidInput_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            // Cho phép Enter để đặt giá nhanh
+            if (e.KeyChar == (char)Keys.Enter)
+            {
+                e.Handled = true;
+                PlaceBid(GetCurrentItem());
+            }
+        }
+
+        private void BidInput_ValueChanged(object sender, EventArgs e)
+        {
+            // Chỉ đảm bảo giá đặt cao hơn giá hiện tại ít nhất 100k
+            Item currentItem = GetCurrentItem();
+            if (currentItem != null)
+            {
+                double currentPrice = currentItem.LastestBidPrice > currentItem.StartingPrice ? currentItem.LastestBidPrice : currentItem.StartingPrice;
+                double minimumBid = currentPrice + 100000;
+
+                if (bidInput.Value < (decimal)minimumBid)
+                {
+                    bidInput.Value = (decimal)minimumBid;
+                }
+            }
+        }
+
+        private void CustomizeDesign()
+        {
+            InitializeBidInput();
             userNameLabel.Text = AuctionClient.gI().Name ?? "Người dùng";
 
             if (!string.IsNullOrEmpty(AuctionClient.gI().avatar_url))
@@ -94,7 +138,7 @@ namespace Client.Forms
                 }
             }
 
-            await LoadAndRenderUserPicture(userPictureUrl);
+            LoadAndRenderUserPicture(userPictureUrl);
         }
 
         private async Task<bool> LoadRooms()
@@ -306,7 +350,7 @@ namespace Client.Forms
             // Xử lý sự kiện click vào ảnh đại diện (có thể mở settings)
         }
 
-        private async void SwitchToAuctionInterface(Room room)
+        private void SwitchToAuctionInterface(Room room)
         {
             try
             {
@@ -355,21 +399,8 @@ namespace Client.Forms
                     int seconds = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalSeconds % 60;
                     timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
 
-                    // Thiết lập giá đặt tối thiểu và tối đa
-                    double minBid = currentItem.LastestBidPrice > 0 ? currentItem.LastestBidPrice : currentItem.StartingPrice;
-                    double maxBid = currentItem.BuyNowPrice > 0 ? currentItem.BuyNowPrice : minBid * 10;
-
-                    // Cập nhật NumericUpDown
-                    bidInput.Minimum = (decimal)minBid;
-                    bidInput.Maximum = (decimal)maxBid;
-                    bidInput.Increment = 100000; // Tăng mỗi lần 100k
-
-                    // Đặt giá trị mặc định là giá tối thiểu + 100k, nhưng không vượt quá giá tối đa
-                    decimal defaultBid = Math.Min((decimal)(minBid + 100000), (decimal)maxBid);
-                    bidInput.Value = defaultBid;
-
-                    bidInput.Enabled = true;
-                    placeBidButton.Enabled = true;
+                    // Thiết lập bidInput với logic cải thiện
+                    SetupBidInputForItem(currentItem);
 
                     if (currentItem != null && currentItem.BuyNowPrice > 0 && !currentItem.isSold && currentItem.TimeLeft > 0)
                     {
@@ -400,6 +431,86 @@ namespace Client.Forms
             }
         }
 
+        // Cập nhật HandlePlaceBidResponse để cập nhật bidInput khi có người khác đặt giá:
+        public void HandlePlaceBidResponse(Message message)
+        {
+            try
+            {
+                // Đọc dữ liệu cơ bản
+                int roomId = message.ReadInt();
+                int itemId = message.ReadInt();
+                double bidPrice = message.ReadDouble();
+                long timeLeft = message.ReadLong();
+                string bidderName = message.ReadUTF();
+
+                if (currentRoom != null && currentRoom.Id == roomId)
+                {
+                    Item currentItem = currentRoom.Items.FirstOrDefault(i => i.Id == itemId);
+                    if (currentItem != null)
+                    {
+                        // Cập nhật thông tin đấu giá
+                        currentItem.LastestBidPrice = bidPrice;
+                        currentItem.LastestBidderName = bidderName;
+                        try
+                        {
+                            currentItem.TimeLeft = timeLeft;
+                        }
+                        catch
+                        {
+                            currentItem.TimeLeft = 10 * 60 * 1000;
+                        }
+
+                        // Cập nhật UI
+                        if (this.InvokeRequired)
+                        {
+                            this.Invoke(new Action(() =>
+                            {
+                                currentPriceLabel.Text = $"Giá hiện tại: {bidPrice:N0} VNĐ";
+                                lastBidderLabel.Text = $"Người đặt giá cuối: {bidderName}";
+
+                                // Cập nhật bidInput với giá tối thiểu mới
+                                double minimumBid = bidPrice + 100000;
+                                bidInput.Minimum = (decimal)minimumBid;
+                                if (bidInput.Value < (decimal)minimumBid)
+                                {
+                                    bidInput.Value = (decimal)minimumBid;
+                                }
+
+                                int minutes = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalMinutes;
+                                int seconds = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalSeconds % 60;
+                                timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
+                            }));
+                        }
+                        else
+                        {
+                            currentPriceLabel.Text = $"Giá hiện tại: {bidPrice:N0} VNĐ";
+                            lastBidderLabel.Text = $"Người đặt giá cuối: {bidderName}";
+
+                            // Cập nhật bidInput với giá tối thiểu mới
+                            double minimumBid = bidPrice + 100000;
+                            bidInput.Minimum = (decimal)minimumBid;
+                            if (bidInput.Value < (decimal)minimumBid)
+                            {
+                                bidInput.Value = (decimal)minimumBid;
+                            }
+
+                            int minutes = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalMinutes;
+                            int seconds = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalSeconds % 60;
+                            timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
+                        }
+
+                        // Thông báo trong chat
+                        string formattedMessage = $"[{DateTime.Now:HH:mm:ss}] {bidderName} đã đặt giá {bidPrice:N0} VNĐ";
+                        AddMessageToChat(formattedMessage, Color.Yellow);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in HandlePlaceBidResponse: {ex.Message}");
+            }
+        }
+
         private void BuyNow(Item item)
         {
             try
@@ -407,6 +518,11 @@ namespace Client.Forms
                 if (item == null)
                 {
                     MessageBox.Show("Không có vật phẩm nào để mua!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                if (currentRoom != null && currentRoom.OwnerId == AuctionClient.gI().UserId)
+                {
+                    MessageBox.Show("Chủ phòng không thể mua vật phẩm!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -419,7 +535,10 @@ namespace Client.Forms
                 if (result == DialogResult.Yes)
                 {
                     Message msg = new Message(CommandType.BuyNow);
+                    msg.WriteInt(currentRoom.Id);
                     msg.WriteInt(item.Id);
+                    msg.WriteDouble(item.BuyNowPrice);
+                    msg.WriteInt(AuctionClient.gI().UserId);
                     AuctionClient.SendMessage(msg);
                 }
             }
@@ -570,15 +689,79 @@ namespace Client.Forms
                     return;
                 }
 
-                double minBid = item.LastestBidPrice > 0 ? item.LastestBidPrice : item.StartingPrice;
-                if (bidInput.Value <= (decimal)minBid)
+                if (item.isSold)
                 {
-                    MessageBox.Show($"Giá đấu phải lớn hơn giá hiện tại ({minBid:N0} VNĐ)!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Vật phẩm này đã được bán!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
+                if (item.TimeLeft <= 0)
+                {
+                    MessageBox.Show("Thời gian đấu giá đã hết!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (currentRoom != null && currentRoom.OwnerId == AuctionClient.gI().UserId)
+                {
+                    MessageBox.Show("Chủ phòng không thể mua vật phẩm!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                double currentPrice = item.LastestBidPrice > 0 ? item.LastestBidPrice : item.StartingPrice;
                 double bidPrice = (double)bidInput.Value;
 
+                // Kiểm tra giá tối thiểu (phải cao hơn giá hiện tại ít nhất 100k)
+                double minimumBid = currentPrice + 100000;
+
+                if (bidPrice < minimumBid)
+                {
+                    MessageBox.Show(
+                        $"Giá đấu phải cao hơn giá hiện tại ít nhất 100,000 VNĐ!\n" +
+                        $"Giá hiện tại: {currentPrice:N0} VNĐ\n" +
+                        $"Giá tối thiểu: {minimumBid:N0} VNĐ",
+                        "Giá đấu không hợp lệ",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+
+                    // Tự động điều chỉnh giá về mức tối thiểu
+                    bidInput.Value = (decimal)minimumBid;
+                    return;
+                }
+
+                // Kiểm tra nếu giá đấu vượt quá giá mua ngay
+                if (item.BuyNowPrice > 0 && bidPrice >= item.BuyNowPrice)
+                {
+                    var result = MessageBox.Show(
+                        $"Giá đấu của bạn ({bidPrice:N0} VNĐ) bằng hoặc cao hơn giá mua ngay ({item.BuyNowPrice:N0} VNĐ).\n" +
+                        $"Bạn có muốn mua ngay với giá {item.BuyNowPrice:N0} VNĐ không?",
+                        "Mua ngay?",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        BuyNow(item);
+                        return;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+
+                // Xác nhận đặt giá
+                var confirmResult = MessageBox.Show(
+                    $"Xác nhận đặt giá {bidPrice:N0} VNĐ cho vật phẩm '{item.Name}'?",
+                    "Xác nhận đặt giá",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (confirmResult != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                // Gửi lệnh đặt giá đến server
                 Message msg = new Message(CommandType.PlaceBid);
                 msg.WriteInt(currentRoom.Id);
                 msg.WriteInt(item.Id);
@@ -586,10 +769,13 @@ namespace Client.Forms
                 msg.WriteInt(AuctionClient.gI().UserId);
                 AuctionClient.SendMessage(msg);
 
-                // Disable bid controls temporarily to prevent spam
+                // Vô hiệu hóa tạm thời để tránh spam
                 bidInput.Enabled = false;
                 placeBidButton.Enabled = false;
-                Task.Delay(1000).ContinueWith(_ =>
+                placeBidButton.Text = "Đang xử lý...";
+
+                // Kích hoạt lại sau 2 giây
+                Task.Delay(2000).ContinueWith(_ =>
                 {
                     if (this.InvokeRequired)
                     {
@@ -597,19 +783,80 @@ namespace Client.Forms
                         {
                             bidInput.Enabled = true;
                             placeBidButton.Enabled = true;
+                            placeBidButton.Text = "Đặt giá";
                         }));
                     }
                     else
                     {
                         bidInput.Enabled = true;
                         placeBidButton.Enabled = true;
+                        placeBidButton.Text = "Đặt giá";
                     }
                 });
+
+                Console.WriteLine($"Đã gửi lệnh đặt giá: {bidPrice:N0} VNĐ cho vật phẩm ID {item.Id}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Lỗi khi đặt giá: {ex}");
                 MessageBox.Show($"Lỗi khi đặt giá: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                // Đảm bảo kích hoạt lại controls nếu có lỗi
+                bidInput.Enabled = true;
+                placeBidButton.Enabled = true;
+                placeBidButton.Text = "Đặt giá";
+            }
+        }
+
+        // Cải thiện method SwitchToAuctionInterface để thiết lập bidInput tốt hơn
+        private void SetupBidInputForItem(Item item)
+        {
+            if (item == null) return;
+
+            double currentPrice = item.LastestBidPrice > 0 ? item.LastestBidPrice : item.StartingPrice;
+            double minimumBid = currentPrice + 100000; // Tối thiểu tăng 100k
+
+            bidInput.Minimum = (decimal)minimumBid;
+            bidInput.Maximum = 99999999999999;
+            bidInput.Value = (decimal)minimumBid;
+            bidInput.Increment = 100000; // Tăng 100k mỗi lần click
+
+            bidInput.Enabled = !item.isSold && item.TimeLeft > 0;
+            placeBidButton.Enabled = !item.isSold && item.TimeLeft > 0;
+        }
+
+        // Thêm method để cập nhật nhanh giá đấu
+        private void AddQuickBidButtons()
+        {
+            if (currentRoom == null || GetCurrentItem() == null) return;
+
+            Item currentItem = GetCurrentItem();
+            double currentPrice = currentItem.LastestBidPrice > 0 ? currentItem.LastestBidPrice : currentItem.StartingPrice;
+
+            // Tạo các nút đặt giá nhanh
+            int[] quickBidAmounts = { 100000, 500000, 1000000 }; // 100k, 500k, 1M
+
+            for (int i = 0; i < quickBidAmounts.Length; i++)
+            {
+                Button quickBidBtn = new Button
+                {
+                    Text = $"+{quickBidAmounts[i] / 1000}K",
+                    Size = new Size(60, 30),
+                    Location = new Point(bidInput.Location.X + bidInput.Width + 10 + (i * 65), bidInput.Location.Y),
+                    BackColor = Color.FromArgb(100, 149, 237),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Font = new Font("Segoe UI", 8, FontStyle.Bold)
+                };
+
+                int amount = quickBidAmounts[i]; // Capture for closure
+                quickBidBtn.Click += (s, e) =>
+                {
+                    bidInput.Value = Math.Min(bidInput.Maximum, bidInput.Value + amount);
+                };
+
+                // Thêm vào panel chứa bidInput (cần xác định panel này)
+                // auctionInfoPanel.Controls.Add(quickBidBtn);
             }
         }
 
@@ -1359,14 +1606,40 @@ namespace Client.Forms
                     return;
                 }
 
+                int roomId = message.ReadInt();
                 int itemId = message.ReadInt();
-                string buyerName = message.ReadUTF();
                 double price = message.ReadDouble();
+                string buyerName = message.ReadUTF();
 
-                if (currentRoom != null)
+                Room room = rooms.FirstOrDefault(r => r.Id == roomId);
+                if (room == null)
+                {
+                    Console.WriteLine($"Không tìm thấy phòng với ID: {roomId}");
+                    return;
+                }
+                Item item = room.Items.FirstOrDefault(i => i.Id == itemId);
+                if (item != null)
+                {
+                    item.isSold = true;
+                    item.LastestBidderName = buyerName;
+                    item.LastestBidPrice = price;
+                }
+
+                // Chỉ hiển thị thông báo nếu người dùng đang ở trong phòng này
+                if (currentRoom != null && currentRoom.Id == roomId)
                 {
                     ShowSystemMessage($"Vật phẩm đã được mua bởi {buyerName} với giá {price:N0} VND!");
-                    // Cập nhật UI nếu cần
+                }
+                // Chuyển sang vật phẩm tiếp theo
+                Item nextItem = GetCurrentItem();
+                if (nextItem != null)
+                {
+                    SetupBidInputForItem(nextItem);
+                    LoadAndRenderItemPicture(nextItem.ImageURL ?? "https://via.placeholder.com/360x260");
+                    itemNameLabel.Text = nextItem.Name ?? "Không xác định";
+                    itemDescLabel.Text = nextItem.Description ?? "Không có mô tả";
+                    currentPriceLabel.Text = $"Giá hiện tại: {(nextItem.LastestBidPrice > nextItem.StartingPrice ? nextItem.LastestBidPrice : nextItem.StartingPrice):N0} VNĐ";
+                    lastBidderLabel.Text = $"Người đấu giá: {(string.IsNullOrEmpty(nextItem.LastestBidderName) ? "Chưa có" : nextItem.LastestBidderName)}";
                 }
             }
             catch (Exception ex)
@@ -1403,71 +1676,6 @@ namespace Client.Forms
             else
             {
                 MessageBox.Show(responseMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        public void HandlePlaceBidResponse(Message message)
-        {
-            try
-            {
-                // Đọc dữ liệu cơ bản
-                int roomId = message.ReadInt();
-                int itemId = message.ReadInt();
-                double bidPrice = message.ReadDouble();
-                long timeLeft = message.ReadLong();
-                string bidderName = message.ReadUTF();
-
-                if (currentRoom != null && currentRoom.Id == roomId)
-                {
-                    Item currentItem = currentRoom.Items.FirstOrDefault(i => i.Id == itemId);
-                    if (currentItem != null)
-                    {
-                        // Cập nhật thông tin đấu giá
-                        currentItem.LastestBidPrice = bidPrice;
-                        currentItem.LastestBidderName = bidderName;
-                        try
-                        {
-                            currentItem.TimeLeft = timeLeft;
-                        }
-                        catch
-                        {
-                            currentItem.TimeLeft = 10 * 60 * 1000;
-                        }
-
-                        // Cập nhật UI
-                        if (this.InvokeRequired)
-                        {
-                            this.Invoke(new Action(() =>
-                            {
-                                currentPriceLabel.Text = $"Giá hiện tại: {bidPrice:N0} VNĐ";
-                                lastBidderLabel.Text = $"Người đặt giá cuối: {bidderName}";
-                                bidInput.Minimum = (decimal)(bidPrice + 100000);
-                                bidInput.Value = bidInput.Minimum;
-                                int minutes = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalMinutes;
-                                int seconds = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalSeconds % 60;
-                                timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
-                            }));
-                        }
-                        else
-                        {
-                            currentPriceLabel.Text = $"Giá hiện tại: {bidPrice:N0} VNĐ";
-                            lastBidderLabel.Text = $"Người đặt giá cuối: {bidderName}";
-                            bidInput.Minimum = (decimal)(bidPrice + 100000);
-                            bidInput.Value = bidInput.Minimum;
-                            int minutes = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalMinutes;
-                            int seconds = (int)TimeSpan.FromMilliseconds(currentItem.TimeLeft).TotalSeconds % 60;
-                            timeRemainingLabel.Text = $"Thời gian còn lại: {minutes:00}:{seconds:00}";
-                        }
-
-                        // Thông báo trong chat
-                        string formattedMessage = $"[{DateTime.Now:HH:mm:ss}] {bidderName} đã đặt giá {bidPrice:N0} VNĐ";
-                        AddMessageToChat(formattedMessage, Color.Yellow);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in HandlePlaceBidResponse: {ex.Message}");
             }
         }
     }
