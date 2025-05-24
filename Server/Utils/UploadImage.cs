@@ -1,71 +1,70 @@
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
+
 namespace Util
 {
     public class Utils
     {
-
-        private class ImgBBData
+        private static Cloudinary GetCloudinaryAccount()
         {
-            [Newtonsoft.Json.JsonProperty("url")]
-            public string Url { get; set; }
-        }
-        private class ImgBBResponse
-        {
-            [Newtonsoft.Json.JsonProperty("success")]
-            public bool Success { get; set; }
+            var account = new Account(
+                "dcpw9c6lx",                             // Cloud name
+                "943687793161495",                      // API key
+                "bgYxq89UEtNcgbGO-GjWoooo7go"            // API secret
+            );
 
-            [Newtonsoft.Json.JsonProperty("data")]
-            public ImgBBData Data { get; set; }
+            return new Cloudinary(account);
         }
 
-        public static async Task<string> UploadImageToImgBB(string base64Image)
+        public static async Task<string> UploadImage(string base64Image)
         {
             try
             {
-                // Kiểm tra và xử lý chuỗi base64
                 if (string.IsNullOrEmpty(base64Image))
-                {
                     return null;
-                }
 
-                // Nếu chuỗi base64 có prefix "data:image/...;base64,", cần loại bỏ nó
+                // Loại bỏ prefix nếu có
                 if (base64Image.Contains("base64,"))
-                {
                     base64Image = base64Image.Split(new[] { "base64," }, StringSplitOptions.None)[1];
-                }
 
-                using (var client = new HttpClient())
+                byte[] imageBytes = Convert.FromBase64String(base64Image);
+                var cloudinary = GetCloudinaryAccount();
+
+                using (var stream = new MemoryStream(imageBytes))
                 {
-                    var content = new MultipartFormDataContent();
-                    content.Add(new StringContent(base64Image), "image");
-                    content.Add(new StringContent("16f3c7c463de293a2a0efebc769de0a7"), "key");
-
-                    var response = await client.PostAsync("https://api.imgbb.com/1/upload", content);
-                    var responseString = await response.Content.ReadAsStringAsync();
-
-                    if (!response.IsSuccessStatusCode)
+                    var uploadParams = new ImageUploadParams()
                     {
-                        Console.WriteLine($"Lỗi khi upload ảnh: {responseString}");
-                        return null;
-                    }
+                        File = new FileDescription("image.jpg", stream),
+                        Folder = "uploads",
+                        Transformation = new Transformation()
+                            .Crop("limit")
+                            .Width(500)
+                            .Quality("auto:eco")
+                            .FetchFormat("auto")
+                    };
 
-                    var jsonResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<ImgBBResponse>(responseString);
-                    if (jsonResponse?.Success == true && jsonResponse.Data?.Url != null)
+                    var uploadResult = await cloudinary.UploadAsync(uploadParams);
+
+                    if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
                     {
-                        return jsonResponse.Data.Url;
+                        return uploadResult.SecureUrl.ToString(); // URL đã có transformation
                     }
                     else
                     {
-                        Console.WriteLine($"Lỗi khi upload ảnh: {responseString}");
+                        Console.WriteLine($"Lỗi upload Cloudinary: {uploadResult.Error?.Message}");
                         return null;
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Lỗi khi upload ảnh: {ex.Message}");
+                Console.WriteLine($"Lỗi khi upload Cloudinary: {ex.Message}");
                 return null;
             }
         }
     }
-
 }
+// This code provides a utility class for uploading images to Cloudinary.

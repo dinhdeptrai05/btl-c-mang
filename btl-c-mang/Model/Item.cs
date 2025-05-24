@@ -40,5 +40,7 @@ namespace Client.Model
             StartingPrice = startingPrice;
             TimeLeft = timeLeft;
         }
+
+
     }
 }

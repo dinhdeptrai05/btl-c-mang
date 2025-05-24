@@ -182,7 +182,7 @@ namespace AuctionServer
 
             if (!string.IsNullOrEmpty(base64Image))
             {
-                avatar_url = await Utils.UploadImageToImgBB(base64Image);
+                avatar_url = await Utils.UploadImage(base64Image);
             }
             else
             {
@@ -240,7 +240,7 @@ namespace AuctionServer
                 string itemDescription = message.ReadUTF();
                 byte[] itemImage = message.ReadFile();
                 string base64Image = Convert.ToBase64String(itemImage);
-                string itemImageUrlString = await Utils.UploadImageToImgBB(base64Image);
+                string itemImageUrlString = await Utils.UploadImage(base64Image);
                 double itemStartingPrice = message.ReadDouble();
                 double itemBuyNowPrice = message.ReadDouble();
                 long itemTimeLeft = message.ReadLong();
