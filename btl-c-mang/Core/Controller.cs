@@ -85,6 +85,22 @@ namespace Client.Core
                         FormLobby.gI().HandlePlaceBidResponse(msg);
                         break;
                     }
+                case CommandType.AuctionEnd:
+                    {
+                        FormLobby.gI().HandleAuctionEnd(msg);
+                        break;
+                    }
+                case CommandType.RoomClosed:
+                    {
+                        FormLobby.gI().HandleRoomClosed(msg);
+                        break;
+                    }
+                case CommandType.KickedFromRoom:
+                    {
+                        FormLobby.gI().HandleKickedFromRoom(msg);
+                        break;
+                    }
+
                 default:
                     Console.WriteLine("Not found handler for command ID: " + command);
                     break;

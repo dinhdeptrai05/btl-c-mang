@@ -41,6 +41,9 @@ namespace Client.Forms
             AuctionClient.gI().RegisterHandler(CommandType.CreateRoomResponse, HandleCreateRoomResponse);
             AuctionClient.gI().RegisterHandler(CommandType.AuctionStarted, HandleAuctionStarted);
             AuctionClient.gI().RegisterHandler(CommandType.BuyNowResponse, HandleBuyNowResponse);
+            AuctionClient.gI().RegisterHandler(CommandType.AuctionEnd, HandleAuctionEnd);
+            AuctionClient.gI().RegisterHandler(CommandType.RoomClosed, HandleRoomClosed);
+            AuctionClient.gI().RegisterHandler(CommandType.KickedFromRoom, HandleKickedFromRoom);
 
 
             // Đăng ký handler nhận tin nhắn chat
@@ -859,15 +862,7 @@ namespace Client.Forms
                 // auctionInfoPanel.Controls.Add(quickBidBtn);
             }
         }
-        public Item GetNextItem()
-        {
-            Item currentItem = GetCurrentItem();
-            if (currentItem == null || currentRoom?.Items == null) return null;
-            int currentIndex = currentRoom.Items.IndexOf(currentItem);
-            if (currentIndex < 0 || currentIndex >= currentRoom.Items.Count - 1) return null;
-            return currentRoom.Items[currentIndex + 1];
 
-        }
         private Item GetCurrentItem()
         {
             try
@@ -1602,6 +1597,54 @@ namespace Client.Forms
             }
         }
 
+        public void HandleAuctionEnd(Message message)
+        {
+            try
+            {
+                int roomId = message.ReadInt();
+                if (currentRoom != null && currentRoom.Id == roomId)
+                {
+                    ShowSystemMessage("Phiên đấu giá đã kết thúc!");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi xử lý thông báo kết thúc đấu giá: {ex}");
+            }
+        }
+
+        public void HandleRoomClosed(Message message)
+        {
+            try
+            {
+                int roomId = message.ReadInt();
+                if (currentRoom != null && currentRoom.Id == roomId)
+                {
+                    ShowSystemMessage("Phòng đã được đóng!");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi xử lý thông báo đóng phòng: {ex}");
+            }
+        }
+
+        public void HandleKickedFromRoom(Message message)
+        {
+            try
+            {
+                int roomId = message.ReadInt();
+                if (currentRoom != null && currentRoom.Id == roomId)
+                {
+                    ShowSystemMessage("Bạn đã bị đuổi khỏi phòng!");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi xử lý thông báo đuổi khỏi phòng: {ex}");
+            }
+        }
+
         public void HandleBuyNowResponse(Message message)
         {
             try
@@ -1610,11 +1653,7 @@ namespace Client.Forms
                 if (!success)
                 {
                     string errorMessage = message.ReadUTF();
-                    // Invoke để hiển thị MessageBox trên UI thread
-                    this.Invoke(new Action(() =>
-                    {
-                        MessageBox.Show(errorMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }));
+                    MessageBox.Show(errorMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -1629,7 +1668,6 @@ namespace Client.Forms
                     Console.WriteLine($"Không tìm thấy phòng với ID: {roomId}");
                     return;
                 }
-
                 Item item = room.Items.FirstOrDefault(i => i.Id == itemId);
                 if (item != null)
                 {
@@ -1641,55 +1679,27 @@ namespace Client.Forms
                 // Chỉ hiển thị thông báo nếu người dùng đang ở trong phòng này
                 if (currentRoom != null && currentRoom.Id == roomId)
                 {
-                    // Invoke để hiển thị system message trên UI thread
-                    this.Invoke(new Action(() =>
-                    {
-                        ShowSystemMessage($"Vật phẩm đã được mua bởi {buyerName} với giá {price:N0} VND!");
-                    }));
+                    ShowSystemMessage($"Vật phẩm đã được mua bởi {buyerName} với giá {price:N0} VND!");
                 }
-
-                // Invoke để chuyển sang item tiếp theo trên UI thread
-                this.Invoke(new Action(() =>
+                // Chuyển sang vật phẩm tiếp theo
+                Item nextItem = GetCurrentItem();
+                if (nextItem != null)
                 {
-                    SwitchNextItem();
-                }));
+                    SetupBidInputForItem(nextItem);
+                    LoadAndRenderItemPicture(nextItem.ImageURL ?? "https://via.placeholder.com/360x260");
+                    itemNameLabel.Text = nextItem.Name ?? "Không xác định";
+                    itemDescLabel.Text = nextItem.Description ?? "Không có mô tả";
+                    currentPriceLabel.Text = $"Giá hiện tại: {(nextItem.LastestBidPrice > nextItem.StartingPrice ? nextItem.LastestBidPrice : nextItem.StartingPrice):N0} VNĐ";
+                    lastBidderLabel.Text = $"Người đấu giá: {(string.IsNullOrEmpty(nextItem.LastestBidderName) ? "Chưa có" : nextItem.LastestBidderName)}";
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Lỗi khi xử lý phản hồi mua ngay: {ex}");
-                // Invoke để hiển thị MessageBox trên UI thread
-                this.Invoke(new Action(() =>
-                {
-                    MessageBox.Show($"Lỗi khi mua ngay: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }));
+                MessageBox.Show($"Lỗi khi mua ngay: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        // Chuyển sang vật phẩm tiếp theo
-        private void SwitchNextItem()
-        {
-            // Kiểm tra xem có đang ở UI thread không
-            if (this.InvokeRequired)
-            {
-                this.Invoke(new Action(SwitchNextItem));
-                return;
-            }
-
-            Item nextItem = GetNextItem();
-            if (nextItem != null)
-            {
-                SetupBidInputForItem(nextItem);
-                LoadAndRenderItemPicture(nextItem.ImageURL ?? "https://via.placeholder.com/360x260");
-                itemNameLabel.Text = nextItem.Name ?? "Không xác định";
-                itemDescLabel.Text = nextItem.Description ?? "Không có mô tả";
-                currentPriceLabel.Text = $"Giá hiện tại: {(nextItem.LastestBidPrice > nextItem.StartingPrice ? nextItem.LastestBidPrice : nextItem.StartingPrice):N0} VNĐ";
-                lastBidderLabel.Text = $"Người đấu giá: {(string.IsNullOrEmpty(nextItem.LastestBidderName) ? "Chưa có" : nextItem.LastestBidderName)}";
-            }
-            else
-            {
-                MessageBox.Show("Không còn vật phẩm nào để đấu giá!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-        }
         public void HandleAddItemResponse(Message message)
         {
             bool success = message.ReadBoolean();

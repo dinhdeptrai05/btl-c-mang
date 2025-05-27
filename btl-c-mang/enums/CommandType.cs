@@ -45,5 +45,8 @@ namespace Client.enums
         public const sbyte LogoutResponse = -13;
         public const sbyte UpdateProfileResponse = -14;
         public const sbyte PlaceBidResponse = -15;
+        public const sbyte AuctionEnd = -17;
+        public const sbyte RoomClosed = -18;
+        public const sbyte KickedFromRoom = -19;
     }
 }

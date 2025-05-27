@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Server.Core;
 
 namespace AuctionServer
 {
@@ -57,7 +58,7 @@ namespace AuctionServer
                     if (currentItem == null)
                     {
                         // Không còn item nào để đấu giá
-                        // CloseRoom();
+                        CloseRoom();
                         break;
                     }
 
@@ -65,83 +66,87 @@ namespace AuctionServer
                     {
                         currentItem.TimeLeft -= 1000; // Giảm 1 giây (1000ms)
                     }
-
+                    else
+                    {
+                        HandleAuctionEnd(currentItem);
+                        break;
+                    }
                     await Task.Delay(1000, _countdownTokenSource.Token); // Đợi 1 giây
                 }
             }, _countdownTokenSource.Token);
         }
 
-        // private void HandleAuctionEnd(Item item)
-        // {
-        //     if (item.LatestBidderId > 0)
-        //     {
-        //         // Có người đấu giá thành công
-        //         item.IsSold = true;
-        //         var successMsg = new Message(CommandType.AuctionEnd);
-        //         successMsg.WriteInt(Id);
-        //         successMsg.WriteInt(item.Id);
-        //         successMsg.WriteBoolean(true); // Đấu giá thành công
-        //         successMsg.WriteInt(item.LatestBidderId);
-        //         successMsg.WriteUTF(item.LatestBidderName);
-        //         successMsg.WriteDouble(item.LatestBidPrice);
-        //         SendToAllUsers(successMsg);
-        //     }
-        //     else
-        //     {
-        //         // Không có người đấu giá
-        //         item.IsSold = true;
-        //         var failMsg = new Message(CommandType.AuctionEnd);
-        //         failMsg.WriteInt(Id);
-        //         failMsg.WriteInt(item.Id);
-        //         failMsg.WriteBoolean(false); // Đấu giá thất bại
-        //         SendToAllUsers(failMsg);
-        //     }
+        private void HandleAuctionEnd(Item item)
+        {
+            if (item.LatestBidderId > 0)
+            {
+                // Có người đấu giá thành công
+                item.IsSold = true;
+                var successMsg = new Message(CommandType.AuctionEnd);
+                successMsg.WriteInt(Id);
+                successMsg.WriteInt(item.Id);
+                successMsg.WriteBoolean(true); // Đấu giá thành công
+                successMsg.WriteInt(item.LatestBidderId);
+                successMsg.WriteUTF(item.LatestBidderName);
+                successMsg.WriteDouble(item.LatestBidPrice);
+                ClientSession.SendToAll(successMsg);
+            }
+            else
+            {
+                // Không có người đấu giá
+                item.IsSold = true;
+                var failMsg = new Message(CommandType.AuctionEnd);
+                failMsg.WriteInt(Id);
+                failMsg.WriteInt(item.Id);
+                failMsg.WriteBoolean(false); // Đấu giá thất bại
+                ClientSession.SendToAll(failMsg);
+            }
 
-        //     // Cập nhật trạng thái phòng trong database
-        //     try
-        //     {
-        //         string stmt = "UPDATE rooms SET items = @param0 WHERE id = @param1";
-        //         string itemsJson = JsonConvert.SerializeObject(Items);
-        //         Database.gI().ExecuteNonQuery(stmt, itemsJson, Id);
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Console.WriteLine($"Lỗi khi cập nhật trạng thái phòng: {ex.Message}");
-        //     }
-        // }
+            // Cập nhật trạng thái phòng trong database
+            try
+            {
+                string stmt = "UPDATE rooms SET items = @param0 WHERE id = @param1";
+                string itemsJson = JsonConvert.SerializeObject(Items);
+                Database.gI().ExecuteNonQuery(stmt, itemsJson, Id);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi cập nhật trạng thái phòng: {ex.Message}");
+            }
+        }
 
-        // private void CloseRoom()
-        // {
-        //     isOpen = false;
-        //     _countdownTokenSource?.Cancel();
+        private void CloseRoom()
+        {
+            isOpen = false;
+            _countdownTokenSource?.Cancel();
 
-        //     // Gửi thông báo đóng phòng cho tất cả user
-        //     var closeMsg = new Message(CommandType.RoomClosed);
-        //     closeMsg.WriteInt(Id);
-        //     SendToAllUsers(closeMsg);
+            // Gửi thông báo đóng phòng cho tất cả user
+            var closeMsg = new Message(CommandType.RoomClosed);
+            closeMsg.WriteInt(Id);
+            ClientSession.SendToAll(closeMsg);
 
-        //     // Kick tất cả user
-        //     foreach (var user in Users.ToList())
-        //     {
-        //         var kickMsg = new Message(CommandType.KickedFromRoom);
-        //         kickMsg.WriteInt(Id);
-        //         user.Session?.SendMessage(kickMsg);
-        //         Users.Remove(user);
-        //     }
+            // Kick tất cả user
+            foreach (var user in Users.ToList())
+            {
+                var kickMsg = new Message(CommandType.KickedFromRoom);
+                kickMsg.WriteInt(Id);
+                user.Session?.SendMessage(kickMsg);
+                Users.Remove(user);
+            }
 
-        //     // Cập nhật trạng thái phòng trong database
-        //     try
-        //     {
-        //         string stmt = "UPDATE rooms SET is_open = 0 WHERE id = @param0";
-        //         Database.gI().ExecuteNonQuery(stmt, Id);
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Console.WriteLine($"Lỗi khi cập nhật trạng thái phòng: {ex.Message}");
-        //     }
+            // Cập nhật trạng thái phòng trong database
+            try
+            {
+                string stmt = "UPDATE rooms SET is_open = 0 WHERE id = @param0";
+                Database.gI().ExecuteNonQuery(stmt, Id);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi cập nhật trạng thái phòng: {ex.Message}");
+            }
 
-        //     // Xóa phòng khỏi danh sách
-        //     Rooms.Remove(this);
-        // }
+            // Xóa phòng khỏi danh sách
+            Rooms.Remove(this);
+        }
     }
 }

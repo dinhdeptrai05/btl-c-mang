@@ -178,3 +178,4 @@ C:\Users\pdinh\Desktop\add\btl-c-mang\Server\obj\Debug\net8.0\Server.pdb
 C:\Users\pdinh\Desktop\add\btl-c-mang\Server\obj\Debug\net8.0\Server.genruntimeconfig.cache
 C:\Users\pdinh\Desktop\add\btl-c-mang\Server\obj\Debug\net8.0\ref\Server.dll
 C:\Users\pdinh\Desktop\add\btl-c-mang\Server\bin\Debug\net8.0\CloudinaryDotNet.dll
+C:\Users\Windows\Desktop\BT\LT_Mang\BTL\Server\bin\Debug\net8.0\CloudinaryDotNet.dll
