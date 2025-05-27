@@ -78,15 +78,14 @@ namespace AuctionServer
 
         private void HandleAuctionEnd(Item item)
         {
-            if (item.LatestBidderId > 0)
+            if (!String.IsNullOrEmpty(item.LatestBidderName))
             {
                 // Có người đấu giá thành công
                 item.IsSold = true;
                 var successMsg = new Message(CommandType.AuctionEnd);
                 successMsg.WriteInt(Id);
-                successMsg.WriteInt(item.Id);
                 successMsg.WriteBoolean(true); // Đấu giá thành công
-                successMsg.WriteInt(item.LatestBidderId);
+                successMsg.WriteInt(item.Id);
                 successMsg.WriteUTF(item.LatestBidderName);
                 successMsg.WriteDouble(item.LatestBidPrice);
                 ClientSession.SendToAll(successMsg);
@@ -97,8 +96,8 @@ namespace AuctionServer
                 item.IsSold = true;
                 var failMsg = new Message(CommandType.AuctionEnd);
                 failMsg.WriteInt(Id);
-                failMsg.WriteInt(item.Id);
                 failMsg.WriteBoolean(false); // Đấu giá thất bại
+                failMsg.WriteInt(item.Id);
                 ClientSession.SendToAll(failMsg);
             }
 

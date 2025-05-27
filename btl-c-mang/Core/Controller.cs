@@ -1,9 +1,9 @@
 ﻿using System;
 using Client.enums;
 using Client.Forms;
+using Client.Forms.Lobby;
 using Client.Forms.Login;
 using Client.Forms.Register;
-using Client.Forms.Lobby;
 
 namespace Client.Core
 {
@@ -95,11 +95,11 @@ namespace Client.Core
                         FormLobby.gI().HandleRoomClosed(msg);
                         break;
                     }
-                case CommandType.KickedFromRoom:
-                    {
-                        FormLobby.gI().HandleKickedFromRoom(msg);
-                        break;
-                    }
+                //case CommandType.KickedFromRoom:
+                //    {
+                //        FormLobby.gI().HandleKickedFromRoom(msg);
+                //        break;
+                //    }
 
                 default:
                     Console.WriteLine("Not found handler for command ID: " + command);

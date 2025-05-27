@@ -115,13 +115,24 @@ namespace AuctionServer
             {
                 Console.WriteLine($"Lỗi khi cập nhật db: {ex.Message}");
             }
-            var response = new Message(CommandType.BuyNowResponse);
-            response.WriteBoolean(true);
-            response.WriteInt(roomId);
-            response.WriteInt(itemId);
-            response.WriteDouble(buyNowPrice);
-            response.WriteUTF(buyer.Name);
-            ClientSession.SendToAll(response);
+            Message response = new Message(CommandType.BuyNowResponse);
+            try
+            {
+                response.WriteBoolean(true);
+                response.WriteInt(roomId);
+                response.WriteInt(itemId);
+                response.WriteDouble(buyNowPrice);
+                response.WriteUTF(buyer.Name);
+                ClientSession.SendToAll(response);
+            }
+            catch (Exception ex)
+            {
+                var failResponse = new Message(CommandType.BuyNowResponse);
+                failResponse.WriteBoolean(false);
+                failResponse.WriteUTF("Lỗi: ");
+                session.SendMessage(failResponse);
+                Console.WriteLine($"Lỗi khi gửi response: {ex.Message}");
+            }
         }
 
         private static void HandlePlaceBid(Message message, ClientSession session)
@@ -244,7 +255,7 @@ namespace AuctionServer
                 double itemStartingPrice = message.ReadDouble();
                 double itemBuyNowPrice = message.ReadDouble();
                 long itemTimeLeft = message.ReadLong();
-                items.Add(new Item(itemId, itemName, itemDescription, itemImageUrlString, itemStartingPrice, itemBuyNowPrice, 0, "", 0, false, itemTimeLeft)); // 10 minutes in milliseconds
+                items.Add(new Item(i, itemName, itemDescription, itemImageUrlString, itemStartingPrice, itemBuyNowPrice, 0, "", 0, false, itemTimeLeft)); // 10 minutes in milliseconds
             }
             try
             {

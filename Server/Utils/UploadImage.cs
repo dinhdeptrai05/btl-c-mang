@@ -67,4 +67,3 @@ namespace Util
         }
     }
 }
-// This code provides a utility class for uploading images to Cloudinary.
