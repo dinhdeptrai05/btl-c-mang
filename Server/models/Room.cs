@@ -91,6 +91,16 @@ namespace AuctionServer
             var startMsg = new Message(CommandType.AuctionStarted);
             startMsg.WriteInt(Id);
             ClientSession.SendToAll(startMsg);
+            Console.WriteLine($"Phòng {Id} đã bắt đầu đấu giá");
+            try
+            {
+                string stmt = "UPDATE rooms SET is_started = 1 WHERE id = @param0";
+                Database.gI().ExecuteNonQuery(stmt, Id);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi cập nhật trạng thái phòng: {ex.Message}");
+            }
         }
 
         private void CheckAuctionTimeStart()
@@ -137,6 +147,8 @@ namespace AuctionServer
             {
                 Console.WriteLine($"Lỗi khi cập nhật trạng thái phòng: {ex.Message}");
             }
+
+            Console.WriteLine($"Phòng {Id} đã kết thúc đấu giá");
         }
 
         private void CloseRoom()
@@ -168,7 +180,6 @@ namespace AuctionServer
             {
                 Console.WriteLine($"Lỗi khi cập nhật trạng thái phòng: {ex.Message}");
             }
-
             // Xóa phòng khỏi danh sách
             Rooms.Remove(this);
         }
