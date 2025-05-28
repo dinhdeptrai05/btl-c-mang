@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Globalization;
 using MySql.Data.MySqlClient;
 
 namespace AuctionServer
@@ -59,7 +60,7 @@ namespace AuctionServer
         {
             try
             {
-                string query = "SELECT *, DATE_FORMAT(auction_start_time, '%Y-%m-%d %H:%i:%s') AS auction_start_time FROM rooms ORDER BY is_open DESC;";
+                string query = "SELECT *, DATE_FORMAT(auction_start_time, '%Y-%m-%d %H:%i:%s') AS auction_start_time_formatted FROM rooms ORDER BY is_open DESC;";
                 DataTable result = ExecuteQuery(query);
                 foreach (DataRow row in result.Rows)
                 {
@@ -74,7 +75,11 @@ namespace AuctionServer
                         bool.Parse(int.Parse(row["is_open"].ToString()) == 1 ? "true" : "false"),
                         row["chat"].ToString(),
                         bool.Parse(int.Parse(row["is_started"].ToString()) == 1 ? "true" : "false"),
-                        DateTime.Parse(row["auction_start_time"].ToString())
+                        DateTime.ParseExact(
+                            row["auction_start_time_formatted"].ToString(),
+                            "yyyy-MM-dd HH:mm:ss",
+                            CultureInfo.InvariantCulture
+                        )
                     );
                     Room.Rooms.Add(room);
                 }
