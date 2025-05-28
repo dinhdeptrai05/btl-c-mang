@@ -57,7 +57,7 @@ namespace AuctionServer
 
         public void init()
         {
-            string query = "SELECT * FROM rooms order by is_open desc";
+            string query = "SELECT *, DATE_FORMAT(auction_start_time, '%Y-%m-%d %H:%i:%s') AS auction_start_time FROM rooms order by is_open desc";
             DataTable result = ExecuteQuery(query);
             foreach (DataRow row in result.Rows)
             {
