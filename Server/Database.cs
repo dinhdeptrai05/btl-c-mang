@@ -57,26 +57,33 @@ namespace AuctionServer
 
         public void init()
         {
-            string query = "SELECT *, DATE_FORMAT(auction_start_time, '%Y-%m-%d %H:%i:%s') AS auction_start_time FROM rooms ORDER BY is_open DESC;";
-            DataTable result = ExecuteQuery(query);
-            foreach (DataRow row in result.Rows)
+            try
             {
-                Room room = new Room(
-                    int.Parse(row["id"].ToString()),
-                    row["name"].ToString(),
-                    int.Parse(row["owner_id"].ToString()),
-                    User.GetUserById(int.Parse(row["owner_id"].ToString())).Name,
-                    int.Parse(row["min_participant"].ToString()),
-                    row["time_created"].ToString(),
-                    row["items"].ToString(),
-                    bool.Parse(int.Parse(row["is_open"].ToString()) == 1 ? "true" : "false"),
-                    row["chat"].ToString(),
-                    bool.Parse(int.Parse(row["is_started"].ToString()) == 1 ? "true" : "false"),
-                    DateTime.Parse(row["auction_start_time"].ToString())
-                );
-                Room.Rooms.Add(room);
+                string query = "SELECT *, DATE_FORMAT(auction_start_time, '%Y-%m-%d %H:%i:%s') AS auction_start_time FROM rooms ORDER BY is_open DESC;";
+                DataTable result = ExecuteQuery(query);
+                foreach (DataRow row in result.Rows)
+                {
+                    Room room = new Room(
+                        int.Parse(row["id"].ToString()),
+                        row["name"].ToString(),
+                        int.Parse(row["owner_id"].ToString()),
+                        User.GetUserById(int.Parse(row["owner_id"].ToString())).Name,
+                        int.Parse(row["min_participant"].ToString()),
+                        row["time_created"].ToString(),
+                        row["items"].ToString(),
+                        bool.Parse(int.Parse(row["is_open"].ToString()) == 1 ? "true" : "false"),
+                        row["chat"].ToString(),
+                        bool.Parse(int.Parse(row["is_started"].ToString()) == 1 ? "true" : "false"),
+                        DateTime.Parse(row["auction_start_time"].ToString())
+                    );
+                    Room.Rooms.Add(room);
+                }
+                Console.WriteLine("Init rooms thành công");
             }
-            Console.WriteLine("Init rooms thành công");
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi khi khởi tạo rooms: " + ex.Message);
+            }
         }
 
         // Thực thi truy vấn không trả về kết quả
