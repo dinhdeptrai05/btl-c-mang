@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using CloudinaryDotNet;
@@ -17,6 +18,32 @@ namespace Util
             );
 
             return new Cloudinary(account);
+        }
+
+        public static bool TryParseDateTime(string dateTimeString, out DateTime result)
+        {
+            result = DateTime.MinValue;
+
+            // Các định dạng có thể có
+            string[] formats = {
+                "HH:mm:ss dd/MM/yyyy",
+                "dd/MM/yyyy HH:mm:ss",
+                "yyyy-MM-dd HH:mm:ss",
+                "MM/dd/yyyy HH:mm:ss",
+                "dd-MM-yyyy HH:mm:ss"
+            };
+
+            foreach (string format in formats)
+            {
+                if (DateTime.TryParseExact(dateTimeString, format,
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out result))
+                {
+                    return true;
+                }
+            }
+
+            // Fallback: thử parse với culture hiện tại
+            return DateTime.TryParse(dateTimeString, out result);
         }
 
         public static async Task<string> UploadImage(string base64Image)

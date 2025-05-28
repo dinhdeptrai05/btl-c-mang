@@ -244,6 +244,15 @@ namespace AuctionServer
             int ownerId = message.ReadInt();
             int itemCount = message.ReadInt();
             List<Item> items = new List<Item>();
+
+            // Parse DateTime với multiple formats để tương thích cross-platform
+            DateTime parsedAuctionTime;
+            if (!Util.Utils.TryParseDateTime(auctionTimeStart, out parsedAuctionTime))
+            {
+                Console.WriteLine($"Warning: Could not parse datetime '{auctionTimeStart}', using current time instead");
+                parsedAuctionTime = DateTime.Now;
+            }
+
             for (int i = 0; i < itemCount; i++)
             {
                 string itemName = message.ReadUTF();
@@ -262,7 +271,7 @@ namespace AuctionServer
                 DataTable result = database.ExecuteQuery(query, roomName, ownerId, Newtonsoft.Json.JsonConvert.SerializeObject(items), 0, auctionTimeStart);
                 int roomId = Convert.ToInt32(result.Rows[0]["id"]);
 
-                Room room = new Room(roomId, roomName, ownerId, User.GetUserById(ownerId).Name, 0, DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy"), Newtonsoft.Json.JsonConvert.SerializeObject(items), true, "[]", false, DateTime.Parse(auctionTimeStart));
+                Room room = new Room(roomId, roomName, ownerId, User.GetUserById(ownerId).Name, 0, DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy"), Newtonsoft.Json.JsonConvert.SerializeObject(items), true, "[]", false, parsedAuctionTime);
                 Room.Rooms.Add(room);
                 var response = new Message(CommandType.CreateRoomResponse);
                 response.WriteBoolean(true);
