@@ -106,11 +106,15 @@
       "DocumentGroups": [
         {
           "DockedWidth": 96,
-          "SelectedChildIndex": 8,
+          "SelectedChildIndex": 9,
           "Children": [
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{40ea2e6b-2121-4bb8-a43e-c83c04b51041}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
             },
             {
               "$type": "Document",
@@ -120,7 +124,7 @@
               "RelativeDocumentMoniker": "Forms\\Lobby\\CreateRoomForm.cs",
               "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Forms\\Lobby\\CreateRoomForm.cs",
               "RelativeToolTip": "Forms\\Lobby\\CreateRoomForm.cs",
-              "ViewState": "AgIAAAcAAAAAAAAAAAAcwAwAAAAuAAAAAAAAAA==",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAcwA0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-05-08T03:51:22.362Z",
               "EditorCaption": ""
@@ -203,9 +207,9 @@
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Program.cs*",
-              "RelativeToolTip": "Program.cs*",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAAABIAAAA9AAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\Windows\\Desktop\\BT\\LT_Mang\\BTL\\btl-c-mang\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAABIAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-05-14T11:20:58.109Z",
               "EditorCaption": ""
@@ -220,10 +224,6 @@
               "RelativeToolTip": "Forms\\FormLogin.cs",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-04-23T14:14:52.018Z"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
             },
             {
               "$type": "Document",

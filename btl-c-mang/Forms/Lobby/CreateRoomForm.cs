@@ -197,7 +197,7 @@ namespace Client.Forms.Lobby
                 // Gửi thông tin phòng và vật phẩm lên server
                 Message msg = new Message(CommandType.CreateRoom);
                 msg.WriteUTF(roomNameBox.Text);
-                msg.WriteUTF(startTimePicker.Value.ToString("HH:mm:ss dd/MM/yyyy"));
+                msg.WriteUTF(startTimePicker.Value.ToString());
                 msg.WriteInt(AuctionClient.gI().UserId);
                 msg.WriteInt(items.Count);
 

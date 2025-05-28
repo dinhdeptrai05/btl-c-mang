@@ -1718,28 +1718,32 @@ namespace Client.Forms
         public void AddMessageToChat(string message, Color color)
         {
             // Invoke required if called from non-UI thread
-            if (chatDisplayBox.InvokeRequired || chatDisplayBoxWaiting.InvokeRequired)
+            if (this.InvokeRequired)
             {
-                chatDisplayBox.Invoke(new Action<string, Color>(AddMessageToChat), message, color);
-                chatDisplayBoxWaiting.Invoke(new Action<string, Color>(AddMessageToChat), message, color);
+                this.Invoke(new Action<string, Color>(AddMessageToChat), message, color);
                 return;
             }
 
             // Add timestamp to messages
             string formattedMessage = $"{message}";
 
-            // Add the message to the chat box
-            chatDisplayBox.SelectionStart = chatDisplayBox.TextLength;
-            chatDisplayBox.SelectionLength = 0;
-            chatDisplayBox.SelectionColor = color;
-            chatDisplayBox.AppendText(formattedMessage + Environment.NewLine);
-            chatDisplayBox.ScrollToCaret();
-
-            chatDisplayBoxWaiting.SelectionStart = chatDisplayBoxWaiting.TextLength;
-            chatDisplayBoxWaiting.SelectionLength = 0;
-            chatDisplayBoxWaiting.SelectionColor = color;
-            chatDisplayBoxWaiting.AppendText(formattedMessage + Environment.NewLine);
-            chatDisplayBoxWaiting.ScrollToCaret();
+            // Add the message to the chat box that is currently visible
+            if (waitingPanel.Visible && chatDisplayBoxWaiting != null)
+            {
+                chatDisplayBoxWaiting.SelectionStart = chatDisplayBoxWaiting.TextLength;
+                chatDisplayBoxWaiting.SelectionLength = 0;
+                chatDisplayBoxWaiting.SelectionColor = color;
+                chatDisplayBoxWaiting.AppendText(formattedMessage + Environment.NewLine);
+                chatDisplayBoxWaiting.ScrollToCaret();
+            }
+            else if (chatDisplayBox != null)
+            {
+                chatDisplayBox.SelectionStart = chatDisplayBox.TextLength;
+                chatDisplayBox.SelectionLength = 0;
+                chatDisplayBox.SelectionColor = color;
+                chatDisplayBox.AppendText(formattedMessage + Environment.NewLine);
+                chatDisplayBox.ScrollToCaret();
+            }
         }
 
         // Example methods to show system messages when users join or leave
