@@ -1806,8 +1806,19 @@ namespace Client.Forms
                 }
 
                 int roomId = message.ReadInt();
-                MessageBox.Show($"Tạo phòng thành công! ID phòng: {roomId}", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadRooms(); // Tải lại danh sách phòng
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() =>
+                    {
+                        MessageBox.Show($"Tạo phòng thành công! ID phòng: {roomId}", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        LoadRooms();
+                    }));
+                }
+                else
+                {
+                    MessageBox.Show($"Tạo phòng thành công! ID phòng: {roomId}", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LoadRooms();
+                }
             }
             catch (Exception ex)
             {
