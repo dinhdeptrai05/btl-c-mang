@@ -12,10 +12,30 @@ namespace Client.Forms.Lobby
         private Item newItem;
         private string selectedImagePath;
         private PictureBox imagePreviewBox;
+        private TextBox nameBox;
+        private TextBox descBox;
+        private NumericUpDown startPriceBox;
+        private NumericUpDown buyNowPriceBox;
 
         public AddItemForm()
         {
             InitializeCustomComponents();
+        }
+
+        public AddItemForm(Item item)
+        {
+            InitializeCustomComponents();
+            // Initialize form with existing item data
+            nameBox.Text = item.Name;
+            descBox.Text = item.Description;
+            startPriceBox.Value = (decimal)item.StartingPrice;
+            buyNowPriceBox.Value = (decimal)item.BuyNowPrice;
+            selectedImagePath = Path.Combine(Application.StartupPath, "uploads", item.ImageURL);
+            if (File.Exists(selectedImagePath))
+            {
+                LoadSelectedImage(selectedImagePath);
+            }
+            newItem = item; // Store the existing item
         }
 
         private void InitializeCustomComponents()
@@ -42,7 +62,7 @@ namespace Client.Forms.Lobby
                 AutoSize = true
             };
 
-            TextBox nameBox = new TextBox
+            nameBox = new TextBox
             {
                 Location = new Point(120, 20),
                 Width = 300,
@@ -59,7 +79,7 @@ namespace Client.Forms.Lobby
                 AutoSize = true
             };
 
-            TextBox descBox = new TextBox
+            descBox = new TextBox
             {
                 Location = new Point(120, 60),
                 Width = 300,
@@ -78,7 +98,7 @@ namespace Client.Forms.Lobby
                 AutoSize = true
             };
 
-            NumericUpDown startPriceBox = new NumericUpDown
+            startPriceBox = new NumericUpDown
             {
                 Location = new Point(120, 180),
                 Width = 200,
@@ -99,7 +119,7 @@ namespace Client.Forms.Lobby
                 AutoSize = true
             };
 
-            NumericUpDown buyNowPriceBox = new NumericUpDown
+            buyNowPriceBox = new NumericUpDown
             {
                 Location = new Point(120, 220),
                 Width = 200,
@@ -243,19 +263,31 @@ namespace Client.Forms.Lobby
                 // Copy file ảnh vào thư mục uploads
                 File.Copy(selectedImagePath, destinationPath, true);
 
-                // Tạo vật phẩm mới
-                newItem = new Item(
-                    0, // ID sẽ được server gán
-                    0, // LastestBidderId
-                    nameBox.Text,
-                    descBox.Text,
-                    fileName, // Lưu tên file thay vì URL
-                    (double)startPriceBox.Value,
-                    (double)buyNowPriceBox.Value,
-                    (double)startPriceBox.Value, // LastestBidPrice ban đầu bằng giá khởi điểm
-                    false, // isSold
-                    600000
-                );
+                // Tạo vật phẩm mới hoặc cập nhật vật phẩm hiện có
+                if (newItem == null)
+                {
+                    newItem = new Item(
+                        0, // ID sẽ được server gán
+                        0, // LastestBidderId
+                        nameBox.Text,
+                        descBox.Text,
+                        fileName, // Lưu tên file thay vì URL
+                        (double)startPriceBox.Value,
+                        (double)buyNowPriceBox.Value,
+                        (double)startPriceBox.Value, // LastestBidPrice ban đầu bằng giá khởi điểm
+                        false, // isSold
+                        600000
+                    );
+                }
+                else
+                {
+                    // Cập nhật thông tin vật phẩm hiện có
+                    newItem.Name = nameBox.Text;
+                    newItem.Description = descBox.Text;
+                    newItem.StartingPrice = (double)startPriceBox.Value;
+                    newItem.BuyNowPrice = (double)buyNowPriceBox.Value;
+                    newItem.ImageURL = fileName;
+                }
 
                 this.DialogResult = DialogResult.OK;
                 this.Close();

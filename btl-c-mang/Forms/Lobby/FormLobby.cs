@@ -24,7 +24,11 @@ namespace Client.Forms
         private const int TIMER_INTERVAL = 100; // Update every 100ms for smoother countdown
         private int currentItemIndex = 0; // Theo dõi chỉ số vật phẩm hiện tại
         private bool isRoomClosing = false; // Thêm biến theo dõi trạng thái đóng phòng
-
+        private Panel waitingPanel;
+        private Label waitingLabel;
+        private Label countdownLabel;
+        private System.Windows.Forms.Timer waitingTimer;
+        private RichTextBox chatDisplayBoxWaiting;
         public static FormLobby gI()
         {
             return instance;
@@ -35,6 +39,7 @@ namespace Client.Forms
             instance = this;
             InitializeComponent();
             InitializeAuctionTimer();
+            InitializeWaitingPanel();
             StartTimers();
             CustomizeDesign();
 
@@ -72,6 +77,147 @@ namespace Client.Forms
             auctionTimer.Interval = TIMER_INTERVAL;
             auctionTimer.Tick += AuctionTimer_Tick;
             lastUpdateTime = DateTime.Now;
+        }
+
+        private void InitializeWaitingPanel()
+        {
+            waitingPanel = new Panel
+            {
+                BackColor = Color.FromArgb(35, 35, 50),
+                Dock = DockStyle.Fill,
+                Visible = false
+            };
+
+            // TableLayoutPanel chính chia 2 dòng: nội dung chờ + chat
+            TableLayoutPanel mainTable = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                RowCount = 2,
+                ColumnCount = 1,
+                BackColor = Color.Transparent
+            };
+            mainTable.RowStyles.Add(new RowStyle(SizeType.Percent, 50F)); // Nội dung chờ
+            mainTable.RowStyles.Add(new RowStyle(SizeType.Percent, 50F)); // Chat
+            mainTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+
+            // TableLayoutPanel căn giữa nội dung chờ
+            TableLayoutPanel centerTable = new TableLayoutPanel
+            {
+                RowCount = 2,
+                ColumnCount = 1,
+                Dock = DockStyle.Fill,
+                BackColor = Color.Transparent,
+            };
+            centerTable.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            centerTable.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            centerTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+
+            waitingLabel = new Label
+            {
+                Text = "Đang chờ bắt đầu đấu giá...",
+                Font = new Font("Segoe UI", 18, FontStyle.Bold),
+                ForeColor = Color.White,
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Dock = DockStyle.Fill
+            };
+
+            countdownLabel = new Label
+            {
+                Text = "Thời gian còn lại: --:--:--",
+                Font = new Font("Segoe UI", 16),
+                ForeColor = Color.LightGreen,
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Dock = DockStyle.Fill
+            };
+
+            centerTable.Controls.Add(waitingLabel, 0, 0);
+            centerTable.Controls.Add(countdownLabel, 0, 1);
+
+            // Panel chat chiếm nửa dưới
+            Panel chatPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(40, 40, 60)
+            };
+
+            chatDisplayBoxWaiting = new RichTextBox
+            {
+                ReadOnly = true,
+                BackColor = Color.FromArgb(25, 25, 40),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 10),
+                Dock = DockStyle.Fill,
+                BorderStyle = BorderStyle.None
+            };
+
+            // Panel cho input và nút gửi
+            Panel chatInputPanel = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 40,
+                BackColor = Color.Transparent
+            };
+
+            TextBox chatInputBoxWaiting = new TextBox
+            {
+                BackColor = Color.FromArgb(55, 55, 70),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 10),
+                Dock = DockStyle.Fill,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            Button sendMessageButtonWaiting = new Button
+            {
+                Text = "Gửi",
+                BackColor = Color.FromArgb(70, 130, 180),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Dock = DockStyle.Right,
+                Width = 80
+            };
+
+            // Sự kiện gửi chat
+            sendMessageButtonWaiting.Click += (s, e) =>
+            {
+                string msg = chatInputBoxWaiting.Text.Trim();
+                if (!string.IsNullOrEmpty(msg) && currentRoom != null)
+                {
+                    Message message = new Message(CommandType.SendChatMessage);
+                    message.WriteInt(currentRoom.Id);
+                    message.WriteUTF(DateTime.Now.ToString("HH:mm:ss"));
+                    message.WriteUTF(AuctionClient.gI().Name);
+                    message.WriteUTF(msg);
+                    AuctionClient.SendMessage(message);
+                    chatInputBoxWaiting.Clear();
+                }
+            };
+            chatInputBoxWaiting.KeyPress += (s, e) =>
+            {
+                if (e.KeyChar == (char)Keys.Enter)
+                {
+                    e.Handled = true;
+                    sendMessageButtonWaiting.PerformClick();
+                }
+            };
+
+            chatInputPanel.Controls.Add(chatInputBoxWaiting);
+            chatInputPanel.Controls.Add(sendMessageButtonWaiting);
+            chatPanel.Controls.Add(chatDisplayBoxWaiting);
+            chatPanel.Controls.Add(chatInputPanel);
+
+            mainTable.Controls.Add(centerTable, 0, 0);
+            mainTable.Controls.Add(chatPanel, 0, 1);
+
+            waitingPanel.Controls.Add(mainTable);
+            auctionMainPanel.Controls.Add(waitingPanel);
+
+            waitingTimer = new System.Windows.Forms.Timer();
+            waitingTimer.Interval = 1000;
+            waitingTimer.Tick += WaitingTimer_Tick;
         }
 
         private void StartTimers()
@@ -419,8 +565,6 @@ namespace Client.Forms
                         control.Dispose();
                     }
                 }
-
-                roomNameLabel.Text = $"Phòng đấu giá: {room.Name} (ID: {room.Id})";
 
                 Item currentItem = GetCurrentItem();
                 if (currentItem != null)
@@ -1061,6 +1205,8 @@ namespace Client.Forms
                 int ownerId = message.ReadInt();
                 string ownerName = message.ReadUTF();
                 bool isOpen = message.ReadBoolean();
+                bool isStarted = message.ReadBoolean();
+                DateTime startTime = DateTime.Parse(message.ReadUTF());
                 int itemsNum = message.ReadInt();
 
                 List<Item> items = new List<Item>();
@@ -1079,10 +1225,9 @@ namespace Client.Forms
                     bool isSold = message.ReadBoolean();
                     long timeLeft = message.ReadLong();
 
-                    // Tạo item mới với giá hiện tại (nếu có người đặt giá) hoặc giá khởi điểm
                     Item item = new Item(itemId, lastBidderID, itemName, itemDesc, imageUrl, startPrice, buyNowPrice,
                         currentPrice, isSold, timeLeft);
-                    item.LastestBidderName = lastBidderName; // Cập nhật tên người đặt giá cuối
+                    item.LastestBidderName = lastBidderName;
                     items.Add(item);
                 }
 
@@ -1096,24 +1241,63 @@ namespace Client.Forms
                 }
 
                 Room joinedRoom = new Room(roomId, roomName, ownerId, ownerName, isOpen, items, chats);
+                joinedRoom.StartTime = startTime;
+                joinedRoom.isStarted = isStarted;
 
-                // Đảm bảo tất cả UI updates được thực hiện trên UI thread
                 if (this.InvokeRequired)
                 {
                     this.Invoke(new Action(() =>
                     {
-                        SwitchToAuctionInterface(joinedRoom);
+                        currentRoom = joinedRoom;
+                        roomNameLabel.Text = $"Phòng đấu giá: {joinedRoom.Name} (ID: {joinedRoom.Id})";
+                        roomsPanel.Visible = false;
+                        auctionMainPanel.Visible = true;
+
+                        if (!isStarted)
+                        {
+                            waitingPanel.Visible = true;
+                            leftPanel.Visible = false;
+                            rightPanel.Visible = false;
+                            roomsPanel.Visible = false;
+                            waitingPanel.BringToFront();
+                            waitingPanel.Refresh();
+                            waitingTimer.Start();
+                        }
+                        else
+                        {
+                            roomsPanel.Visible = false;
+                            waitingPanel.Visible = false;
+                            leftPanel.Visible = true;
+                            rightPanel.Visible = true;
+                            SwitchToAuctionInterface(joinedRoom);
+                            ShowSystemMessage("Phiên đấu giá đã bắt đầu!");
+                        }
+
                         chatDisplayBox.Clear();
+                        chatDisplayBoxWaiting.Clear();
                         LoadChatHistory(chats);
-                        ShowSystemMessage("Bạn đã tham gia phòng đấu giá!");
                     }));
                 }
                 else
                 {
-                    SwitchToAuctionInterface(joinedRoom);
+                    currentRoom = joinedRoom;
+                    roomsPanel.Visible = false;
+                    auctionMainPanel.Visible = true;
+
+                    if (!isStarted)
+                    {
+                    }
+                    else
+                    {
+                        // Đã bắt đầu thì show giao diện đấu giá như cũ
+                        auctionMainPanel.Visible = true;
+                        roomsPanel.Visible = false;
+                        SwitchToAuctionInterface(joinedRoom);
+                        ShowSystemMessage("Phiên đấu giá đã bắt đầu!");
+                    }
+
                     chatDisplayBox.Clear();
                     LoadChatHistory(chats);
-                    ShowSystemMessage("Bạn đã tham gia phòng đấu giá!");
                 }
             }
             catch (Exception ex)
@@ -1134,45 +1318,49 @@ namespace Client.Forms
         {
             try
             {
-                if (chatDisplayBox.InvokeRequired)
+                if (chatDisplayBox.InvokeRequired || chatDisplayBoxWaiting.InvokeRequired)
                 {
                     chatDisplayBox.Invoke(new Action<List<Chat>>(LoadChatHistory), chats);
+                    chatDisplayBoxWaiting.Invoke(new Action<List<Chat>>(LoadChatHistory), chats);
                     return;
                 }
 
-                // First display a system message
                 ShowSystemMessage("Lịch sử chat của phòng:");
 
-                // Then display each chat message from the history
                 foreach (Chat chat in chats)
                 {
                     // Format: [Time] Name: Message
                     string formattedMessage = $"[{chat.time}] {chat.name}: {chat.message}";
 
-                    // Add the message with appropriate color (you can customize this)
                     chatDisplayBox.SelectionStart = chatDisplayBox.TextLength;
                     chatDisplayBox.SelectionLength = 0;
 
-                    // Use different colors for different users if desired
+                    chatDisplayBoxWaiting.SelectionStart = chatDisplayBoxWaiting.TextLength;
+                    chatDisplayBoxWaiting.SelectionLength = 0;
+
                     if (chat.name == AuctionClient.gI().Name)
                     {
                         formattedMessage = $"[{chat.time}] Bạn: {chat.message}";
-                        chatDisplayBox.SelectionColor = Color.LightBlue; // Current user's messages
+                        chatDisplayBox.SelectionColor = Color.LightBlue;
+                        chatDisplayBoxWaiting.SelectionColor = Color.LightBlue;
                     }
                     else if (chat.name.ToLower().Contains("hệ thống") || chat.name.ToLower().Contains("system"))
                     {
-                        chatDisplayBox.SelectionColor = Color.Yellow; // System messages
+                        chatDisplayBox.SelectionColor = Color.Yellow;
+                        chatDisplayBoxWaiting.SelectionColor = Color.Yellow;
                     }
                     else
                     {
-                        chatDisplayBox.SelectionColor = Color.White; // Other users' messages
+                        chatDisplayBox.SelectionColor = Color.White;
+                        chatDisplayBoxWaiting.SelectionColor = Color.White;
                     }
 
                     chatDisplayBox.AppendText(formattedMessage + Environment.NewLine);
+                    chatDisplayBoxWaiting.AppendText(formattedMessage + Environment.NewLine);
                 }
 
-                // Scroll to the bottom to show the most recent messages
                 chatDisplayBox.ScrollToCaret();
+                chatDisplayBoxWaiting.ScrollToCaret();
             }
             catch (Exception ex)
             {
@@ -1197,8 +1385,9 @@ namespace Client.Forms
                     string owner_name = message.ReadUTF();
                     string name = message.ReadUTF();
                     string time_created = message.ReadUTF();
+                    DateTime startTime = DateTime.Parse(message.ReadUTF());
 
-                    Room room = new Room(id, name, owner_id, owner_name, isOpen, isStarted);
+                    Room room = new Room(id, name, owner_id, owner_name, isOpen, isStarted, startTime);
                     room.TimeCreated = time_created;
                     rooms.Add(room);
                 }
@@ -1517,9 +1706,6 @@ namespace Client.Forms
                     msg.WriteUTF(message); // Chat message
                     AuctionClient.SendMessage(msg);
 
-                    // Note: We don't add the message to the chat display here
-                    // because we'll receive it back from the server with
-                    // a proper timestamp, which will trigger the chat update handler
                 }
             }
             catch (Exception ex)
@@ -1532,9 +1718,10 @@ namespace Client.Forms
         public void AddMessageToChat(string message, Color color)
         {
             // Invoke required if called from non-UI thread
-            if (chatDisplayBox.InvokeRequired)
+            if (chatDisplayBox.InvokeRequired || chatDisplayBoxWaiting.InvokeRequired)
             {
                 chatDisplayBox.Invoke(new Action<string, Color>(AddMessageToChat), message, color);
+                chatDisplayBoxWaiting.Invoke(new Action<string, Color>(AddMessageToChat), message, color);
                 return;
             }
 
@@ -1547,6 +1734,12 @@ namespace Client.Forms
             chatDisplayBox.SelectionColor = color;
             chatDisplayBox.AppendText(formattedMessage + Environment.NewLine);
             chatDisplayBox.ScrollToCaret();
+
+            chatDisplayBoxWaiting.SelectionStart = chatDisplayBoxWaiting.TextLength;
+            chatDisplayBoxWaiting.SelectionLength = 0;
+            chatDisplayBoxWaiting.SelectionColor = color;
+            chatDisplayBoxWaiting.AppendText(formattedMessage + Environment.NewLine);
+            chatDisplayBoxWaiting.ScrollToCaret();
         }
 
         // Example methods to show system messages when users join or leave
@@ -1630,8 +1823,27 @@ namespace Client.Forms
                 int roomId = message.ReadInt();
                 if (currentRoom != null && currentRoom.Id == roomId)
                 {
-                    ShowSystemMessage("Phiên đấu giá đã bắt đầu!");
-                    // Cập nhật UI nếu cần
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(new Action(() =>
+                        {
+                            waitingPanel.Visible = false;
+                            roomsPanel.Visible = false;
+                            leftPanel.Visible = true;
+                            rightPanel.Visible = true;
+                            leftPanel.BringToFront();
+                            rightPanel.BringToFront();
+
+                            SwitchToAuctionInterface(currentRoom);
+                            ShowSystemMessage("Phiên đấu giá đã bắt đầu!");
+                        }));
+                    }
+                    else
+                    {
+                        auctionMainPanel.Visible = true;
+                        SwitchToAuctionInterface(currentRoom);
+                        ShowSystemMessage("Phiên đấu giá đã bắt đầu!");
+                    }
                 }
             }
             catch (Exception ex)
@@ -1976,5 +2188,25 @@ namespace Client.Forms
                 MessageBox.Show(responseMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        private void WaitingTimer_Tick(object sender, EventArgs e)
+        {
+            if (currentRoom == null) return;
+            long timeLeft = (long)(currentRoom.StartTime - DateTime.Now).TotalMilliseconds;
+            if (timeLeft <= 0)
+            {
+                waitingTimer.Stop();
+                waitingPanel.Visible = false;
+                auctionMainPanel.Visible = true;
+            }
+            else
+            {
+                int hours = (int)TimeSpan.FromMilliseconds(timeLeft).TotalHours;
+                int minutes = (int)TimeSpan.FromMilliseconds(timeLeft).TotalMinutes % 60;
+                int seconds = (int)TimeSpan.FromMilliseconds(timeLeft).TotalSeconds % 60;
+                countdownLabel.Text = $"Thời gian còn lại: {hours:00}:{minutes:00}:{seconds:00}";
+            }
+        }
+
     }
 }

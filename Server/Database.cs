@@ -57,7 +57,7 @@ namespace AuctionServer
 
         public void init()
         {
-            string query = "SELECT * FROM rooms";
+            string query = "SELECT * FROM rooms order by is_open desc";
             DataTable result = ExecuteQuery(query);
             foreach (DataRow row in result.Rows)
             {
@@ -70,7 +70,9 @@ namespace AuctionServer
                     row["time_created"].ToString(),
                     row["items"].ToString(),
                     bool.Parse(int.Parse(row["is_open"].ToString()) == 1 ? "true" : "false"),
-                    row["chat"].ToString()
+                    row["chat"].ToString(),
+                    bool.Parse(int.Parse(row["is_started"].ToString()) == 1 ? "true" : "false"),
+                    DateTime.Parse(row["auction_start_time"].ToString())
                 );
                 Room.Rooms.Add(room);
             }

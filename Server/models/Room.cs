@@ -20,13 +20,15 @@ namespace AuctionServer
         public bool isOpen { get; set; }
         public string Chat { get; set; }
         public List<User> Users { get; set; }
+        public DateTime AuctionStartTime { get; set; }
+        public bool isStarted { get; set; }
         public List<Chat> Chats { get; set; }
         private CancellationTokenSource _countdownTokenSource;
         private Task _countdownTask;
 
         public static List<Room> Rooms = new List<Room>();
 
-        public Room(int id, string name, int ownerId, string ownerName, int minParticipant, string timeCreated, string itemsJson, bool isOpen, string chat)
+        public Room(int id, string name, int ownerId, string ownerName, int minParticipant, string timeCreated, string itemsJson, bool isOpen, string chat, bool is_started, DateTime auctionStartTime)
         {
             Id = id;
             Name = name;
@@ -39,6 +41,8 @@ namespace AuctionServer
             Chat = chat;
             Users = new List<User>();
             Chats = new List<Chat>();
+            AuctionStartTime = auctionStartTime;
+            isStarted = is_started;
             StartCountdown();
         }
 
@@ -54,26 +58,47 @@ namespace AuctionServer
             {
                 while (!_countdownTokenSource.Token.IsCancellationRequested)
                 {
-                    var currentItem = Items.FirstOrDefault(i => !i.IsSold);
-                    if (currentItem == null)
-                    {
-                        // Không còn item nào để đấu giá
-                        CloseRoom();
-                        break;
-                    }
+                    CheckAuctionTimeStart();
 
-                    if (currentItem.TimeLeft > 0)
+                    if (isStarted)
                     {
-                        currentItem.TimeLeft -= 1000; // Giảm 1 giây (1000ms)
+                        var currentItem = Items.FirstOrDefault(i => !i.IsSold);
+                        if (currentItem == null)
+                        {
+                            // Không còn item nào để đấu giá
+                            CloseRoom();
+                            break;
+                        }
+
+                        if (currentItem.TimeLeft > 0)
+                        {
+                            currentItem.TimeLeft -= 1000;
+                        }
+                        else
+                        {
+                            HandleAuctionEnd(currentItem);
+                            break;
+                        }
                     }
-                    else
-                    {
-                        HandleAuctionEnd(currentItem);
-                        break;
-                    }
-                    await Task.Delay(1000, _countdownTokenSource.Token); // Đợi 1 giây
+                    await Task.Delay(1000, _countdownTokenSource.Token);
                 }
             }, _countdownTokenSource.Token);
+        }
+
+        private void StartAuction()
+        {
+            isStarted = true;
+            var startMsg = new Message(CommandType.AuctionStarted);
+            startMsg.WriteInt(Id);
+            ClientSession.SendToAll(startMsg);
+        }
+
+        private void CheckAuctionTimeStart()
+        {
+            if (DateTime.Now >= AuctionStartTime && !isStarted)
+            {
+                StartAuction();
+            }
         }
 
         private void HandleAuctionEnd(Item item)

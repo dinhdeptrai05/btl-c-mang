@@ -1,22 +1,22 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using Client.Core;
 using Client.enums;
 using Client.Model;
 using Message = Client.Core.Message;
-using System.IO;
-using System;
 
 namespace Client.Forms.Lobby
 {
     public partial class CreateRoomForm : Form
     {
         private List<Item> items = new List<Item>();
-        private int minParticipants = 5;
+        private DateTime startTime = DateTime.Now.AddMinutes(5);
         private ListView itemsListView;
         private TextBox roomNameBox;
-        private NumericUpDown minParticipantsBox;
+        private DateTimePicker startTimePicker;
         private Label itemCountLabel;
 
         public CreateRoomForm()
@@ -59,25 +59,25 @@ namespace Client.Forms.Lobby
                 Font = new Font("Segoe UI", 10)
             };
 
-            Label minParticipantsLabel = new Label
+            Label startTimeLabel = new Label
             {
-                Text = "Số người tối thiểu:",
+                Text = "Thời gian bắt đầu:",
                 ForeColor = Color.White,
                 Location = new Point(20, 60),
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold)
             };
 
-            minParticipantsBox = new NumericUpDown
+            startTimePicker = new DateTimePicker
             {
                 Location = new Point(150, 60),
-                Width = 100,
-                Minimum = 2,
-                Maximum = 20,
-                Value = minParticipants,
+                Width = 300,
+                Format = DateTimePickerFormat.Custom,
+                CustomFormat = "HH:mm dd/MM/yyyy",
+                MinDate = DateTime.Now,
+                Value = startTime,
                 BackColor = Color.FromArgb(55, 55, 75),
                 ForeColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
                 Font = new Font("Segoe UI", 10)
             };
 
@@ -142,17 +142,16 @@ namespace Client.Forms.Lobby
             };
 
             // Thêm các cột cho ListView với kích thước phù hợp
-            itemsListView.Columns.Add("Ảnh", 100);
-            itemsListView.Columns.Add("Tên vật phẩm", 200);
-            itemsListView.Columns.Add("Mô tả", 290);
-            itemsListView.Columns.Add("Giá khởi điểm", 130);
-            itemsListView.Columns.Add("Giá mua ngay", 130);
-            itemsListView.Columns.Add("Thời gian kết thúc", 190);
+            itemsListView.Columns.Add("Ảnh", 150);
+            itemsListView.Columns.Add("Tên vật phẩm", 210);
+            itemsListView.Columns.Add("Mô tả", 320);
+            itemsListView.Columns.Add("Giá khởi điểm", 140);
+            itemsListView.Columns.Add("Giá mua ngay", 140);
 
             // Add controls to panels
             roomInfoPanel.Controls.AddRange(new Control[] {
                 roomNameLabel, roomNameBox,
-                minParticipantsLabel, minParticipantsBox,
+                startTimeLabel, startTimePicker,
                 itemCountLabel
             });
 
@@ -176,8 +175,6 @@ namespace Client.Forms.Lobby
                     {
                         Item newItem = addItemForm.GetItem();
                         items.Add(newItem);
-
-                        // Cập nhật ListView với tất cả vật phẩm
                         RefreshItemsList();
                     }
                 }
@@ -200,18 +197,16 @@ namespace Client.Forms.Lobby
                 // Gửi thông tin phòng và vật phẩm lên server
                 Message msg = new Message(CommandType.CreateRoom);
                 msg.WriteUTF(roomNameBox.Text);
-                msg.WriteInt((int)minParticipantsBox.Value);
-                msg.WriteInt((int)AuctionClient.gI().UserId);
+                msg.WriteUTF(startTimePicker.Value.ToString("HH:mm:ss dd/MM/yyyy"));
+                msg.WriteInt(AuctionClient.gI().UserId);
                 msg.WriteInt(items.Count);
 
                 foreach (Item item in items)
                 {
-                    msg.WriteInt(item.Id);
                     msg.WriteUTF(item.Name);
                     msg.WriteUTF(item.Description);
 
                     string imagePath = Path.Combine(Application.StartupPath, "uploads", item.ImageURL);
-                    Console.WriteLine(imagePath);
                     if (File.Exists(imagePath))
                     {
                         msg.WriteFile(imagePath);
@@ -230,9 +225,47 @@ namespace Client.Forms.Lobby
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             };
+
+            // Add context menu for edit/delete
+            ContextMenuStrip contextMenu = new ContextMenuStrip();
+            ToolStripMenuItem editItem = new ToolStripMenuItem("Sửa");
+            ToolStripMenuItem deleteItem = new ToolStripMenuItem("Xóa");
+            contextMenu.Items.Add(editItem);
+            contextMenu.Items.Add(deleteItem);
+            itemsListView.ContextMenuStrip = contextMenu;
+
+            editItem.Click += (s, e) =>
+            {
+                if (itemsListView.SelectedItems.Count > 0)
+                {
+                    int index = itemsListView.SelectedIndices[0];
+                    Item selectedItem = items[index];
+                    using (AddItemForm editForm = new AddItemForm(selectedItem))
+                    {
+                        if (editForm.ShowDialog() == DialogResult.OK)
+                        {
+                            items[index] = editForm.GetItem();
+                            RefreshItemsList();
+                        }
+                    }
+                }
+            };
+
+            deleteItem.Click += (s, e) =>
+            {
+                if (itemsListView.SelectedItems.Count > 0)
+                {
+                    int index = itemsListView.SelectedIndices[0];
+                    if (MessageBox.Show("Bạn có chắc chắn muốn xóa vật phẩm này?", "Xác nhận",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                    {
+                        items.RemoveAt(index);
+                        RefreshItemsList();
+                    }
+                }
+            };
         }
 
-        // Phương thức mới để cập nhật danh sách vật phẩm
         private void RefreshItemsList()
         {
             itemsListView.BeginUpdate();
@@ -272,7 +305,6 @@ namespace Client.Forms.Lobby
                 lvi.SubItems.Add(it.Description);
                 lvi.SubItems.Add(it.StartingPrice.ToString("N0") + " VND");
                 lvi.SubItems.Add(it.BuyNowPrice.ToString("N0") + " VND");
-                lvi.SubItems.Add(it.TimeLeft.ToString());
                 itemsListView.Items.Add(lvi);
             }
 

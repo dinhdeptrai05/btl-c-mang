@@ -294,6 +294,7 @@
             // auctionMainPanel
             // 
             this.auctionMainPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(50)))));
+            this.auctionMainPanel.Controls.Add(this.waitingPanel);
             this.auctionMainPanel.Controls.Add(this.leftPanel);
             this.auctionMainPanel.Controls.Add(this.rightPanel);
             this.auctionMainPanel.Controls.Add(this.roomInfoPanel);

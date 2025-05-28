@@ -240,13 +240,12 @@ namespace AuctionServer
         private static async void HandleCreateRoom(Message message, ClientSession session)
         {
             string roomName = message.ReadUTF();
-            int minParticipant = message.ReadInt();
+            string auctionTimeStart = message.ReadUTF();
             int ownerId = message.ReadInt();
             int itemCount = message.ReadInt();
             List<Item> items = new List<Item>();
             for (int i = 0; i < itemCount; i++)
             {
-                int itemId = message.ReadInt();
                 string itemName = message.ReadUTF();
                 string itemDescription = message.ReadUTF();
                 byte[] itemImage = message.ReadFile();
@@ -259,11 +258,11 @@ namespace AuctionServer
             }
             try
             {
-                string query = "INSERT INTO rooms (name, min_participant, owner_id, items, is_started) VALUES (@param0, @param1, @param2, @param3, @param4); SELECT LAST_INSERT_ID() as id;";
-                DataTable result = database.ExecuteQuery(query, roomName, minParticipant, ownerId, Newtonsoft.Json.JsonConvert.SerializeObject(items), 0);
+                string query = "INSERT INTO rooms (name, owner_id, items, is_started, auction_start_time) VALUES (@param0, @param1, @param2, @param3, @param4); SELECT LAST_INSERT_ID() as id;";
+                DataTable result = database.ExecuteQuery(query, roomName, ownerId, Newtonsoft.Json.JsonConvert.SerializeObject(items), 0, auctionTimeStart);
                 int roomId = Convert.ToInt32(result.Rows[0]["id"]);
 
-                Room room = new Room(roomId, roomName, ownerId, User.GetUserById(ownerId).Name, minParticipant, DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy"), Newtonsoft.Json.JsonConvert.SerializeObject(items), true, "");
+                Room room = new Room(roomId, roomName, ownerId, User.GetUserById(ownerId).Name, 0, DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy"), Newtonsoft.Json.JsonConvert.SerializeObject(items), true, "[]", false, DateTime.Parse(auctionTimeStart));
                 Room.Rooms.Add(room);
                 var response = new Message(CommandType.CreateRoomResponse);
                 response.WriteBoolean(true);
@@ -329,6 +328,8 @@ namespace AuctionServer
                     response.WriteInt(room.OwnerId);
                     response.WriteUTF(room.OwnerName);
                     response.WriteBoolean(room.isOpen);
+                    response.WriteBoolean(room.isStarted);
+                    response.WriteUTF(room.AuctionStartTime.ToString("HH:mm:ss dd/MM/yyyy"));
                     response.WriteInt(room.Items.Count);
 
                     foreach (Item item in room.Items)
@@ -402,23 +403,37 @@ namespace AuctionServer
         {
             try
             {
-                string query = "SELECT * FROM rooms";
-                DataTable result = database.ExecuteQuery(query);
+                // string query = "SELECT * FROM rooms";
+                // DataTable result = database.ExecuteQuery(query);
 
+                // var response = new Message(CommandType.getAllRoomResponse);
+                // int count = result.Rows.Count;
+                // response.WriteInt(count);
+
+                // for (int i = 0; i < count; i++)
+                // {
+                //     DataRow row = result.Rows[i];
+                //     response.WriteInt(Convert.ToInt32(row["id"]));
+                //     response.WriteInt(Convert.ToInt32(row["owner_id"]));
+                //     response.WriteBoolean(Convert.ToBoolean(row["is_open"]));
+                //     response.WriteBoolean(Convert.ToBoolean(row["is_started"]));
+                //     response.WriteUTF(User.GetUserById(Convert.ToInt32(row["owner_id"])).Name);
+                //     response.WriteUTF(row["name"].ToString());
+                //     response.WriteUTF(row["time_created"].ToString());
+                //     response.WriteUTF(row["auction_start_time"].ToString());
+                // }
                 var response = new Message(CommandType.getAllRoomResponse);
-                int count = result.Rows.Count;
-                response.WriteInt(count);
-
-                for (int i = 0; i < count; i++)
+                response.WriteInt(Room.Rooms.Count);
+                foreach (Room room in Room.Rooms)
                 {
-                    DataRow row = result.Rows[i];
-                    response.WriteInt(Convert.ToInt32(row["id"]));
-                    response.WriteInt(Convert.ToInt32(row["owner_id"]));
-                    response.WriteBoolean(Convert.ToBoolean(row["is_open"]));
-                    response.WriteBoolean(Convert.ToBoolean(row["is_started"]));
-                    response.WriteUTF(User.GetUserById(Convert.ToInt32(row["owner_id"])).Name);
-                    response.WriteUTF(row["name"].ToString());
-                    response.WriteUTF(row["time_created"].ToString());
+                    response.WriteInt(room.Id);
+                    response.WriteInt(room.OwnerId);
+                    response.WriteBoolean(room.isOpen);
+                    response.WriteBoolean(room.isStarted);
+                    response.WriteUTF(User.GetUserById(room.OwnerId).Name);
+                    response.WriteUTF(room.Name);
+                    response.WriteUTF(room.TimeCreated);
+                    response.WriteUTF(room.AuctionStartTime.ToString("HH:mm:ss dd/MM/yyyy"));
                 }
 
                 session.SendMessage(response);

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Client.Model
 {
@@ -13,8 +14,9 @@ namespace Client.Model
         public List<Item> Items { get; set; }
         public List<Chat> Chats { get; set; }
         public bool isStarted { get; set; }
+        public DateTime StartTime { get; set; }
 
-        public Room(int id, string name, int ownerId, string ownerName, bool isOpen, bool isStarted)
+        public Room(int id, string name, int ownerId, string ownerName, bool isOpen, bool isStarted, DateTime startTime)
         {
             Id = id;
             Name = name;
@@ -22,6 +24,7 @@ namespace Client.Model
             OwnerName = ownerName;
             this.isOpen = isOpen;
             this.isStarted = isStarted;
+            this.StartTime = startTime;
             Items = new List<Item>();
         }
 
